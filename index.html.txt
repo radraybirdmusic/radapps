@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v1.31 - HOSTED</title>
+    <style>
+        :root { --neon-purple: #9d00ff; --zoot-orange: #FF4500; --buzz-green: #0f0; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
+        .fae-mode { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        
+        #header { position: absolute; top: 0; width: 100%; height: 60px; background: rgba(10,10,10,0.95); display: flex; align-items: center; justify-content: center; gap: 20px; z-index: 50; border-bottom: 2px solid #333; }
+        .btn { background: #111; border: 2px solid var(--neon-purple); color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 0 10px var(--neon-purple); pointer-events: auto; }
+
+        /* BUZZ HUB */
+        #buzz-hub-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; z-index: 100; cursor: pointer; pointer-events: auto; }
+        #ring-path { fill: none; stroke: var(--buzz-green); stroke-width: 5; stroke-dasharray: 282.7; stroke-dashoffset: 282.7; transform: rotate(-90deg); transform-origin: center; display: none; }
+
+        /* TRUE ANATOMY PADS */
+        .pad-container { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; pointer-events: none; }
+        .hand-pad { pointer-events: auto; }
+        .v-main { fill: none; stroke: #fff; stroke-width: 3; filter: drop-shadow(0 0 8px var(--neon-purple)); }
+        .v-open { fill: none; stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 5px var(--neon-purple)); }
+
+        /* GILLESPIE SLIDERS */
+        .slider { position: absolute; width: 45px; height: 250px; background: #111; border: 2px solid #555; border-radius: 22px; top: 150px; pointer-events: auto; }
+        #l-slider { left: 4%; } #r-slider { right: 4%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--zoot-orange), #fff); border-radius: 22px; pointer-events: none; transition: height 0.05s linear; }
+
+        #gate { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+
+<div id="gate"><button class="btn" style="font-size: 24px; padding: 30px 60px;" onclick="ignite()">IGNITE</button></div>
+
+<div id="ui" style="display:none;">
+    <div id="header">
+        <button id="p-lock" class="btn" onclick="toggleLock()">LOCK: OFF</button>
+        <button id="play-btn" class="btn" style="opacity:0.3; pointer-events:none;" onclick="playback()">PLAY ▶</button>
+    </div>
+
+    <div id="buzz-hub-container" onpointerdown="fetchAndLock()">
+        <svg width="100" height="100">
+            <circle cx="50" cy="50" r="45" fill="#111" stroke="#fff" stroke-width="2" />
+            <circle id="ring-path" cx="50" cy="50" r="45" />
+            <text id="b-icon" x="50" y="48" text-anchor="middle" font-size="36" fill="white">🐝</text>
+            <text id="b-status" x="50" y="72" text-anchor="middle" font-size="14" font-weight="bold" fill="white">LOAD</text>
+        </svg>
+    </div>
+
+    <div id="l-slider" class="slider" onpointerdown="slide(event, 'l')" onpointermove="slide(event, 'l')"><div id="l-fill" class="fill" style="height: 50%"></div></div>
+    <div id="r-slider" class="slider" onpointerdown="slide(event, 'r')" onpointermove="slide(event, 'r')"><div id="r-fill" class="fill" style="height: 50%"></div></div>
+
+    <div class="pad-container">
+        <svg width="260" height="260" class="hand-pad">
+            <circle class="v-main" cx="40" cy="40" r="30" /> <circle class="v-main" cx="110" cy="40" r="30" /> <circle class="v-main" cx="180" cy="40" r="30" /> <circle class="v-open" cx="235" cy="40" r="15" />
+            <circle class="v-main" cx="40" cy="110" r="30" /> <circle class="v-main" cx="110" cy="110" r="30" /> <circle class="v-main" cx="180" cy="110" r="30" /> <circle class="v-open" cx="235" cy="110" r="15" />
+            <circle class="v-main" cx="40" cy="180" r="30" /> <circle class="v-main" cx="110" cy="180" r="30" /> <circle class="v-main" cx="180" cy="180" r="30" /> <circle class="v-open" cx="235" cy="180" r="15" />
+        </svg>
+        <svg width="260" height="260" class="hand-pad">
+            <circle class="v-open" cx="25" cy="40" r="15" /> <circle class="v-main" cx="80" cy="40" r="30" /> <circle class="v-main" cx="150" cy="40" r="30" /> <circle class="v-main" cx="220" cy="40" r="30" />
+            <circle class="v-open" cx="25" cy="110" r="15" /> <circle class="v-main" cx="80" cy="110" r="30" /> <circle class="v-main" cx="150" cy="110" r="30" /> <circle class="v-main" cx="220" cy="110" r="30" />
+            <circle class="v-open" cx="25" cy="180" r="15" /> <circle class="v-main" cx="80" cy="180" r="30" /> <circle class="v-main" cx="150" cy="180" r="30" /> <circle class="v-main" cx="220" cy="180" r="30" />
+        </svg>
+    </div>
+</div>
+
+<canvas id="v-snake" style="position:absolute; inset:0; z-index:1; pointer-events:none;"></canvas>
+
+<script>
+    // CONFIG: Change this to your GitHub/Google Script URL
+    const ASSET_URL = "https://raw.githubusercontent.com/your-repo/master/assets/buzz.wav";
+
+    let aCtx, analyzer, isFae = false, isLock = false, intensities = {l:0.5, r:0.5};
+    let audioBuffer, sourceNode;
+
+    const cvs = document.getElementById('v-snake');
+    const ctx = cvs.getContext('2d');
+
+    function ignite() {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('ui').style.display = 'block';
+        draw();
+    }
+
+    async function fetchAndLock() {
+        if (!aCtx) return;
+        if (aCtx.state === 'suspended') await aCtx.resume();
+        
+        const status = document.getElementById('b-status');
+        const icon = document.getElementById('b-icon');
+        const ring = document.getElementById('ring-path');
+
+        status.textContent = "FETCH";
+        icon.textContent = "🌀";
+        ring.style.display = "block";
+
+        try {
+            // Fetch external audio instead of recording locally
+            const response = await fetch(ASSET_URL);
+            const arrayBuffer = await response.arrayBuffer();
+            audioBuffer = await aCtx.decodeAudioData(arrayBuffer);
+            
+            // Simulate the 7-second "Model" progress for UI consistency
+            let p = 0;
+            const rec = setInterval(() => {
+                p += 5; // Faster visual fill for pre-loaded assets
+                ring.style.strokeDashoffset = 282.7 - (282.7 * (p / 100));
+                if (p >= 100) {
+                    clearInterval(rec);
+                    ring.style.display = "none";
+                    icon.textContent = "🔒"; status.textContent = "SET";
+                    document.getElementById('play-btn').style.opacity = 1;
+                    document.getElementById('play-btn').style.pointerEvents = "auto";
+                }
+            }, 100);
+
+        } catch (e) {
+            alert("Asset Load Failed. Check CORS/URL.");
+            status.textContent = "FAIL";
+        }
+    }
+
+    function playback() {
+        if (!audioBuffer) return;
+        const btn = document.getElementById('play-btn');
+        
+        if (btn.innerText.includes("PLAY")) {
+            sourceNode = aCtx.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            
+            analyzer = aCtx.createAnalyser();
+            sourceNode.connect(analyzer);
+            analyzer.connect(aCtx.destination);
+            
+            sourceNode.start(0);
+            btn.innerText = "STOP ■";
+            sourceNode.onended = () => { btn.innerText = "PLAY ▶"; };
+        } else {
+            if (sourceNode) sourceNode.stop();
+            btn.innerText = "PLAY ▶";
+        }
+    }
+
+    function slide(e, side) {
+        if (isLock || (e.buttons !== 1 && !e.touches)) return;
+        const r = e.currentTarget.getBoundingClientRect();
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        let v = 1 - (y - r.top) / r.height;
+        intensities[side] = Math.max(0, Math.min(1.5, v * 1.5));
+        document.getElementById(side + '-fill').style.height = (intensities[side] / 1.5) * 100 + "%";
+        if (Math.max(intensities.l, intensities.r) > 1.0) { document.body.classList.add('fae-mode'); isFae = true; }
+        else { document.body.classList.remove('fae-mode'); isFae = false; }
+    }
+
+    function toggleLock() { isLock = !isLock; document.getElementById('p-lock').innerText = isLock ? "LOCK: ON" : "LOCK: OFF"; }
+
+    function draw() {
+        cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+        ctx.clearRect(0,0,cvs.width, cvs.height);
+        if (analyzer) {
+            const data = new Uint8Array(analyzer.frequencyBinCount);
+            analyzer.getByteTimeDomainData(data);
+            ctx.strokeStyle = isFae ? '#0ff' : '#9d00ff';
+            ctx.lineWidth = 4; ctx.beginPath();
+            for(let i=0; i<data.length; i++) {
+                let x = (i/data.length) * cvs.width;
+                let y = (data[i]/128.0) * (cvs.height/8) + (cvs.height/2);
+                if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            }
+            ctx.stroke();
+        }
+        requestAnimationFrame(draw);
+    }
+</script>
+</body>
+</html>
