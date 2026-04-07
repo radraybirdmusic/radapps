@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v1.65</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
+        .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        #gate { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        #ui { position: absolute; inset: 0; z-index: 100; display: none; }
+        #header { width: 100%; height: 60px; background: rgba(10,10,10,0.95); display: flex; align-items: center; justify-content: center; gap: 20px; border-bottom: 2px solid #333; }
+        .btn { background: #111; border: 2px solid var(--p); color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #ctrl { position: absolute; top: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; z-index: 200; }
+        .unit { width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .h-btn { width: 80px; height: 80px; border-radius: 50%; background: #111; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; z-index: 5; }
+        .h-lab { font-size: 10px; font-weight: bold; margin-top: 8px; letter-spacing: 1px; }
+        
+        /* ALIGNMENT FIX: Ring centered on 80px button */
+        #ring-svg { position: absolute; top: 0; left: 10px; pointer-events: none; z-index: 10; }
+        #ring-path { fill: none; stroke: var(--g); stroke-width: 5; stroke-dasharray: 251.3; stroke-dashoffset: 251.3; transform: rotate(-90deg); transform-origin: center; display: none; }
+
+        .pad-c { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; pointer-events: none; }
+        .v-main { fill: none; stroke: #fff; stroke-width: 3; }
+        .v-open { fill: none; stroke: #fff; stroke-width: 2; }
+        .sld { position: absolute; width: 45px; height: 250px; background: #111; border: 2px solid #555; border-radius: 22px; top: 210px; pointer-events: auto; }
+        #l-s { left: 4%; } #r-s { right: 4%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 22px; pointer-events: none; }
+        #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+    </style>
+</head>
+<body>
+<div id="gate"><button id="b-mic" class="btn" style="font-size: 24px; padding: 30px 60px;">IGNITE v1.65</button></div>
+<div id="ui">
+    <div id="header"><button id="p-lock" class="btn" onclick="toggleLock()">LOCK: OFF</button><button id="b-play" class="btn" disabled>PLAY ▶</button></div>
+    <div id="ctrl">
+        <div class="unit"><button id="b-rec" class="h-btn">🐝</button><svg id="ring-svg" width="80" height="80"><circle id="ring-path" cx="40" cy="40" r="37" /></svg><div class="h-lab" id="rec-l">REC</div></div>
+        <div class="unit"><button id="b-file" class="h-btn">📂</button><div class="h-lab" id="file-l">LOAD</div></div>
+    </div>
+    <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" class="fill" style="height:50%"></div></div>
+    <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" class="fill" style="height:50%"></div></div>
+    <div class="pad-c">
+        <svg width="240" height="240" style="pointer-events:auto"><circle class="v-main" cx="40" cy="40" r="30" /><circle class="v-main" cx="110" cy="40" r="30" /><circle class="v-main" cx="180" cy="40" r="30" /><circle class="v-open" cx="230" cy="40" r="10" /><circle class="v-main" cx="40" cy="110" r="30" /><circle class="v-main" cx="110" cy="110" r="30" /><circle class="v-main" cx="180" cy="110" r="30" /><circle class="v-open" cx="230" cy="110" r="10" /><circle class="v-main" cx="40" cy="180" r="30" /><circle class="v-main" cx="110" cy="180" r="30" /><circle class="v-main" cx="180" cy="180" r="30" /><circle class="v-open" cx="230" cy="180" r="10" /></svg>
+        <svg width="240" height="240" style="pointer-events:auto"><circle class="v-open" cx="10" cy="40" r="10" /><circle class="v-main" cx="60" cy="40" r="30" /><circle class="v-main" cx="130" cy="40" r="30" /><circle class="v-main" cx="200" cy="40" r="30" /><circle class="v-open" cx="10" cy="110" r="10" /><circle class="v-main" cx="60" cy="110" r="30" /><circle class="v-main" cx="130" cy="110" r="30" /><circle class="v-main" cx="200" cy="110" r="30" /><circle class="v-open" cx="10" cy="180" r="10" /><circle class="v-main" cx="60" cy="180" r="30" /><circle class="v-main" cx="130" cy="180" r="30" /><circle class="v-main" cx="200" cy="180" r="30" /></svg>
+    </div>
+</div>
+<canvas id="osc"></canvas>
+<script>
+const URL_A = "https://radraybirdmusic.github.io/radapps/buzz.wav";
+let aCtx, anal, src, rec, chks = [], aUrl, isL = false, isF = false, ints = {l:0.5, r:0.5}, isR = false, activeAudio = null;
+const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d');
+const bMic = document.getElementById('b-mic'), bRec = document.getElementById('b-rec'), bFile = document.getElementById('b-file'), bPlay = document.getElementById('b-play');
+
+bMic.onclick = async () => {
+    document.getElementById('gate').style.display = 'none'; document.getElementById('ui').style.display = 'block';
+    try {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        src = aCtx.createMediaStreamSource(s); anal = aCtx.createAnalyser(); anal.fftSize = 2048; src.connect(anal);
+        rec = new MediaRecorder(s); rec.ondataavailable = e => { if (e.data.size > 0) chks.push(e.data); };
+        rec.onstop = () => { 
+            aUrl = URL.createObjectURL(new Blob(chks, { type: 'audio/webm;codecs=opus' })); 
+            bPlay.disabled = false; bPlay.style.opacity = 1; isR = false; 
+        };
+        draw();
+    } catch (err) { alert("Mic required."); }
+};
+
+bRec.onclick = () => {
+    if (rec.state === "inactive") {
+        const ring = document.getElementById('ring-path'), lab = document.getElementById('rec-l');
+        let c = 4; const cd = setInterval(() => { lab.innerText = "WAIT " + c; if (c-- <= 0) {
+            clearInterval(cd); lab.innerText = "RECORDING"; ring.style.display = "block"; chks = []; isR = true; rec.start();
+            let p = 0; const prg = setInterval(() => { p += 1.42; ring.style.strokeDashoffset = 251.3 - (251.3 * (p / 100));
+            if (p >= 100) { clearInterval(prg); rec.stop(); ring.style.display = "none"; lab.innerText = "SET 🔒"; } }, 100);
+        } }, 500);
+    }
+};
+
+bFile.onclick = async () => {
+    if (aCtx.state === 'suspended') await aCtx.resume();
+    const lab = document.getElementById('file-l'); lab.innerText = "FETCHING...";
+    try {
+        const r = await fetch(URL_A, { cache: "no-store" }); const b = await r.arrayBuffer();
+        aUrl = URL.createObjectURL(new Blob([b], { type: 'audio/wav' })); bPlay.disabled = false; bPlay.style.opacity = 1; lab.innerText = "LOADED ✅";
+    } catch (e) { lab.innerText = "FAIL ❌"; }
+};
+
+bPlay.onclick = () => {
+    if (bPlay.innerText.includes("STOP")) {
+        if (activeAudio) { activeAudio.pause(); activeAudio.currentTime = 0; }
+        bPlay.innerText = "PLAY ▶";
+        return;
+    }
+    if (!aUrl) return;
+    activeAudio = new Audio(aUrl);
+    activeAudio.play();
+    bPlay.innerText = "STOP ■";
+    activeAudio.onended = () => { bPlay.innerText = "PLAY ▶"; };
+};
+
+function draw() {
+    requestAnimationFrame(draw); if (!anal) return;
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    const d = new Uint8Array(anal.frequencyBinCount); anal.getByteTimeDomainData(d);
+    ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.lineWidth = 4; ctx.strokeStyle = isF ? "#0ff" : "#9d00ff"; ctx.beginPath();
+    const sw = cvs.width / d.length; let x = 0;
+    for (let i = 0; i < d.length; i++) {
+        let amp = (isR || bPlay.innerText.includes("STOP")) ? (d[i] / 128.0) : 1.0;
+        const y = amp * cvs.height / 2; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); x += sw;
+    }
+    ctx.stroke();
+}
+
+function slide(e, s) {
+    if (isL || (e.buttons !== 1 && !e.touches)) return;
+    const r = e.currentTarget.getBoundingClientRect(); const y = e.touches ? e.touches[0].clientY : e.clientY;
+    let v = 1 - (y - r.top) / r.height; ints[s] = Math.max(0, Math.min(1.5, v * 1.5));
+    document.getElementById(s + '-f').style.height = (ints[s] / 1.5) * 100 + "%";
+    if (ints.l > 1.0 || ints.r > 1.0) { document.body.classList.add('fae'); isF = true; } else { document.body.classList.remove('fae'); isF = false; }
+}
+
+function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCK: ON" : "LOCK: OFF"; }
+</script>
+</body>
+</html>
