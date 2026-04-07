@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v1.69</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
+        .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        #gate { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        #ui { position: absolute; inset: 0; z-index: 100; display: none; }
+        
+        /* HEADER: Massive Performance Buttons */
+        #header { width: 100%; height: 120px; background: rgba(10,10,10,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 3px solid #444; }
+        .h-row { display: flex; align-items: center; justify-content: center; gap: 15px; width: 95%; }
+        .btn { background: #111; border: 4px solid var(--p); color: #fff; padding: 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; flex: 1; text-align: center; }
+        .b-rec-play { border-color: var(--y); color: var(--y); }
+        .b-file-play { border-color: var(--gry); color: var(--gry); }
+        #diag { font-size: 12px; color: var(--g); margin-top: 8px; text-transform: uppercase; font-weight: bold; }
+
+        /* PERFORMANCE GRID */
+        #grid-container { position: absolute; top: 130px; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 10px; box-sizing: border-box; }
+        .column { display: flex; flex-direction: column; justify-content: space-around; align-items: center; flex: 1; }
+        .pad { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; transition: 0.1s; pointer-events: auto; }
+        .pad:active { background: rgba(255,255,255,0.3); transform: scale(0.9); }
+        
+        /* SLIDERS & CONTROLS */
+        .sld { position: absolute; width: 60px; height: 300px; background: #111; border: 3px solid #555; border-radius: 30px; top: 220px; pointer-events: auto; z-index: 300; }
+        #l-s { left: 2%; } #r-s { right: 2%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 30px; pointer-events: none; }
+        
+        #ctrl { position: absolute; top: 140px; width: 100%; display: flex; justify-content: center; gap: 60px; pointer-events: none; }
+        .unit { pointer-events: auto; }
+        .h-btn { width: 100px; height: 100px; border-radius: 50%; background: #111; border: 4px solid #fff; color: #fff; font-size: 40px; cursor: pointer; }
+        
+        #osc { position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0.6; }
+    </style>
+</head>
+<body>
+<div id="gate"><button id="b-mic" class="btn" style="font-size: 32px;">IGNITE v1.69</button></div>
+<div id="ui">
+    <div id="header">
+        <div class="h-row">
+            <button id="p-rec-play" class="btn b-rec-play" disabled>PLAY 🐝</button>
+            <button id="p-lock" class="btn" onclick="toggleLock()">LOCK: OFF</button>
+            <button id="p-file-play" class="btn b-file-play" disabled>PLAY 📂</button>
+        </div>
+        <div id="diag">MONITOR: SILENT</div>
+    </div>
+
+    <div id="grid-container">
+        <div class="column" id="left-col">
+            <div class="pad" id="L4">L4</div><div class="pad" id="L3">L3</div>
+            <div class="pad" id="L2">L2</div><div class="pad" id="L1">L1</div>
+        </div>
+        <div class="column" id="right-col">
+            <div class="pad" id="R4">R4</div><div class="pad" id="R3">R3</div>
+            <div class="pad" id="R2">R2</div><div class="pad" id="R1">R1</div>
+        </div>
+    </div>
+
+    <div id="ctrl">
+        <div class="unit"><button id="b-rec" class="h-btn">🐝</button><div class="h-lab">REC</div></div>
+        <div class="unit">
+            <button id="b-file" class="h-btn">📂</button>
+            <input type="file" id="f-in" hidden accept="audio/*,application/octet-stream,*/*">
+            <div class="h-lab">LOAD</div>
+        </div>
+    </div>
+
+    <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" class="fill" style="height:50%"></div></div>
+    <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" class="fill" style="height:50%"></div></div>
+</div>
+<canvas id="osc"></canvas>
+
+<script>
+let aCtx, anal, src, rec, chks = [], recUrl = null, fileUrl = null, isL = false, isF = false, ints = {l:0.5, r:0.5}, isR = false, activeA = null;
+const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d'), diag = document.getElementById('diag');
+const bMic = document.getElementById('b-mic'), bRec = document.getElementById('b-rec'), bFile = document.getElementById('b-file'), fIn = document.getElementById('f-in'), pRecPlay = document.getElementById('p-rec-play'), pFilePlay = document.getElementById('p-file-play');
+
+bMic.onclick = async () => {
+    document.getElementById('gate').style.display = 'none'; document.getElementById('ui').style.display = 'block';
+    try {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        src = aCtx.createMediaStreamSource(s); anal = aCtx.createAnalyser(); anal.fftSize = 2048; 
+        draw();
+    } catch (err) { alert("Mic required."); }
+};
+
+bRec.onclick = () => {
+    if (rec && rec.state === "recording") return;
+    diag.innerText = "RECORDING STARTING...";
+    chks = []; isR = true;
+    src.connect(anal);
+    rec = new MediaRecorder(src.mediaStream);
+    rec.ondataavailable = e => chks.push(e.data);
+    rec.onstop = () => {
+        const b = new Blob(chks, { type: 'audio/webm' });
+        recUrl = URL.createObjectURL(b);
+        diag.innerText = "🐝 SAVED: " + b.size + " BYTES";
+        pRecPlay.disabled = false; pRecPlay.style.opacity = 1;
+        src.disconnect(anal);
+        isR = false;
+    };
+    rec.start();
+    setTimeout(() => { if(rec.state==="recording") rec.stop(); }, 4000); // 4s capture limit
+};
+
+bFile.onclick = () => fIn.click();
+fIn.onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    fileUrl = URL.createObjectURL(f);
+    diag.innerText = "📂 LOADED: " + f.size + " BYTES";
+    pFilePlay.disabled = false; pFilePlay.style.opacity = 1;
+};
+
+pRecPlay.onclick = () => playBucket(recUrl, pRecPlay, "🐝");
+pFilePlay.onclick = () => playBucket(fileUrl, pFilePlay, "📂");
+
+function playBucket(url, btn, icon) {
+    if (btn.innerText.includes("STOP")) { if (activeA) activeA.pause(); return; }
+    if (!url) return;
+    if (activeA) { activeA.pause(); activeA.src = ""; }
+    activeA = new Audio(url);
+    const aSrc = aCtx.createMediaElementSource(activeA);
+    aSrc.connect(anal); anal.connect(aCtx.destination);
+    activeA.play();
+    btn.innerText = "STOP ■";
+    activeA.onended = () => { btn.innerText = "PLAY " + icon; aSrc.disconnect(anal); };
+}
+
+function draw() {
+    requestAnimationFrame(draw); if (!anal) return;
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    const d = new Uint8Array(anal.frequencyBinCount); anal.getByteTimeDomainData(d);
+    ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.lineWidth = 6; ctx.strokeStyle = isF ? "#0ff" : "#9d00ff";
+    if (!(isR || (activeA && !activeA.paused))) return;
+    ctx.beginPath(); const sw = cvs.width / d.length; let x = 0;
+    for (let i = 0; i < d.length; i++) {
+        const y = (d[i] / 128.0) * cvs.height / 2;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); x += sw;
+    }
+    ctx.stroke();
+}
+
+function slide(e, s) {
+    if (isL || (e.buttons !== 1 && !e.touches)) return;
+    const r = e.currentTarget.getBoundingClientRect(); const y = e.touches ? e.touches[0].clientY : e.clientY;
+    let v = 1 - (y - r.top) / r.height; ints[s] = Math.max(0, Math.min(1.5, v * 1.5));
+    document.getElementById(s + '-f').style.height = (ints[s] / 1.5) * 100 + "%";
+    if (ints.l > 1.0 || ints.r > 1.0) { document.body.classList.add('fae'); isF = true; } else { document.body.classList.remove('fae'); isF = false; }
+}
+function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCK: ON" : "LOCK: OFF"; }
+</script>
+</body>
+</html>
