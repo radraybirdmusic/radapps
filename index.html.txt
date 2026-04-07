@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trumpet Project 167</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #e0e0e0; text-align: center; padding: 20px; }
+        .btn { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border: none; border-radius: 8px; transition: 0.3s; }
+        .record { background: #ff4444; color: white; }
+        .play { background: #44ff44; color: black; }
+        .open { background: #4444ff; color: white; }
+        #status { margin-top: 20px; padding: 10px; border: 1px solid #444; background: #000; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <h2>🎺 Trumpet Diagnostic (v1.67)</h2>
+    
+    <button id="recBtn" class="btn record">START RECORD</button>
+    <button id="playBtn" class="btn play">PLAYBACK</button>
+    <input type="file" id="fileInput" style="display:none;" accept="audio/*,application/octet-stream,.wav,.mp3">
+    <button id="openBtn" class="btn open">OPEN FILE</button>
+
+    <div id="status">System Ready... Waiting for Input.</div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        const status = document.getElementById('status');
+
+        // 1. THE OPENER (MIME FIX)
+        document.getElementById('openBtn').onclick = () => document.getElementById('fileInput').click();
+
+        document.getElementById('fileInput').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // TEST: Look at the file data without playing it
+                status.innerHTML = `FILE DETECTED:<br>Name: ${file.name}<br>Size: ${file.size} bytes<br>MIME: ${file.type}`;
+                const url = URL.createObjectURL(file);
+                window.lastFileUrl = url;
+            }
+        };
+
+        // 2. THE RECORDER (DIAGNOSTIC VERSION)
+        document.getElementById('recBtn').onclick = async () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                document.getElementById('recBtn').innerText = "START RECORD";
+                status.innerHTML = "Recording Stopped. Analyzing Data...";
+            } else {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // Explicit MIME
+                    window.lastFileUrl = URL.createObjectURL(audioBlob);
+                    // SUCCESS TEST: Does the blob actually have weight?
+                    status.innerHTML = `RECORDING SAVED:<br>Final Size: ${audioBlob.size} bytes`;
+                };
+
+                mediaRecorder.start();
+                document.getElementById('recBtn').innerText = "STOP RECORD";
+                status.innerHTML = "🎤 RECORDING IN PROGRESS...";
+            }
+        };
+
+        // 3. THE PLAYBACK
+        document.getElementById('playBtn').onclick = () => {
+            if (window.lastFileUrl) {
+                const audio = new Audio(window.lastFileUrl);
+                audio.play();
+                status.innerHTML = "🔊 Playing back audio...";
+            } else {
+                status.innerHTML = "❌ No file loaded to play.";
+            }
+        };
+    </script>
+</body>
+</html>
