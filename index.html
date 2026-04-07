@@ -3,57 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TRUMPET GARDEN v1.60</title>
+    <title>TRUMPET GARDEN v1.59 (Reverted Sizes & Tight Center)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
     <style>
         :root { --neon-purple: #9d00ff; --zoot-orange: #FF4500; }
         body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
         .fae-mode { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
         
-        #gate { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        #ui { position: absolute; inset: 0; z-index: 100; display: none; }
-        
-        #header { width: 100%; height: 60px; background: rgba(10,10,10,0.95); display: flex; align-items: center; justify-content: center; gap: 20px; border-bottom: 2px solid #333; }
+        /* The UI container passes clicks through, but the buttons inside catch them */
+        #ui { position: absolute; inset: 0; z-index: 100; display: none; pointer-events: none; }
+        #header { width: 100%; height: 60px; background: rgba(10,10,10,0.95); display: flex; align-items: center; justify-content: center; gap: 20px; border-bottom: 2px solid #333; pointer-events: auto; }
         .btn { background: #111; border: 2px solid var(--neon-purple); color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-        /* THE TWO-BUTTON INTERFACE */
-        #control-layer { position: absolute; top: 80px; width: 100%; display: flex; justify-content: center; gap: 60px; z-index: 200; }
-        
-        .hub-unit { width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; }
-        .hub-btn { width: 80px; height: 80px; border-radius: 50%; background: #111; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 0 15px var(--neon-purple); }
-        .hub-label { font-size: 10px; font-weight: bold; margin-top: 5px; color: #fff; }
+        #buzz-hub-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 220px; height: 100px; display: flex; justify-content: space-between; z-index: 200; pointer-events: auto; }
+        .hub-btn { width: 100px; height: 100px; border-radius: 50%; background: #111; border: 4px solid #555; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none; transition: border-color 0.3s; touch-action: manipulation; }
 
-        .pad-container { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; pointer-events: none; }
-        .hand-pad { pointer-events: auto; }
+        /* CENTERED PAD SPACING: Big buttons restored, gap reduced */
+        .pad-container { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; gap: 2vw; pointer-events: none; }
+        .hand-pad { pointer-events: auto; width: 42vw; max-width: 400px; height: auto; }
+        
         .v-main { fill: none; stroke: #fff; stroke-width: 3; filter: drop-shadow(0 0 8px var(--neon-purple)); }
         .v-open { fill: none; stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 5px var(--neon-purple)); }
 
-        .slider { position: absolute; width: 45px; height: 250px; background: #111; border: 2px solid #555; border-radius: 22px; top: 180px; pointer-events: auto; }
+        /* SLIDERS: Active for touch */
+        .slider { position: absolute; width: 50px; height: 250px; background: #111; border: 2px solid #555; border-radius: 25px; top: 150px; pointer-events: auto; touch-action: none; }
         #l-slider { left: 4%; } #r-slider { right: 4%; }
         .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--zoot-orange), #fff); border-radius: 22px; pointer-events: none; }
-
-        #oscillo { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="gate">
-    <button id="btn-mic" class="btn" style="font-size: 24px; padding: 30px 60px;">IGNITE</button>
-</div>
+<input type="file" id="audio-loader" accept="audio/*, video/*, .m4a, .mp3, .wav, .aac" style="display:none;" onchange="handleAudioInput(event)">
 
 <div id="ui">
     <div id="header">
         <button id="p-lock" class="btn" onclick="toggleLock()">LOCK: OFF</button>
-        <button id="btn-play" class="btn" disabled>PLAY ▶</button>
+        <button id="btn-play" class="btn" style="opacity: 0.5;" disabled onclick="playAudio()">PLAY ▶</button>
     </div>
 
-    <div id="control-layer">
-        <div class="hub-unit" id="buzz-unit">
-            <button id="btn-rec" class="hub-btn">🐝</button>
-            <div class="hub-label" id="rec-label">BUZZ</div>
+    <div id="buzz-hub-container">
+        <div id="btn-load" class="hub-btn" onclick="document.getElementById('audio-loader').click();">
+            <span style="font-size:30px; pointer-events:none;">📁</span>
+            <span id="load-label" style="font-size:12px; font-weight:bold; pointer-events:none; margin-top:4px;">LOAD</span>
         </div>
-        <div class="hub-unit" id="file-unit">
-            <button id="btn-file" class="hub-btn">📂</button>
-            <div class="hub-label">FILE</div>
+
+        <div id="btn-rec" class="hub-btn" onclick="toggleRecord()">
+            <span style="font-size:30px; pointer-events:none;">🐝</span>
+            <span id="rec-label" style="font-size:12px; font-weight:bold; pointer-events:none; margin-top:4px;">LIVE</span>
         </div>
     </div>
 
@@ -61,114 +58,343 @@
     <div id="r-slider" class="slider" onpointerdown="slide(event, 'r')" onpointermove="slide(event, 'r')"><div id="r-fill" class="fill" style="height: 50%"></div></div>
 
     <div class="pad-container">
-        <svg width="260" height="260" class="hand-pad">
-            <circle class="v-main" cx="40" cy="40" r="30" /> <circle class="v-main" cx="110" cy="40" r="30" /> <circle class="v-main" cx="180" cy="40" r="30" /> <circle class="v-open" cx="235" cy="40" r="15" />
-            <circle class="v-main" cx="40" cy="110" r="30" /> <circle class="v-main" cx="110" cy="110" r="30" /> <circle class="v-main" cx="180" cy="110" r="30" /> <circle class="v-open" cx="235" cy="110" r="15" />
-            <circle class="v-main" cx="40" cy="180" r="30" /> <circle class="v-main" cx="110" cy="180" r="30" /> <circle class="v-main" cx="180" cy="180" r="30" /> <circle class="v-open" cx="235" cy="180" r="15" />
+        <svg viewBox="0 0 400 400" class="hand-pad">
+            <circle class="v-main" cx="60" cy="60" r="35" /> <circle class="v-main" cx="160" cy="60" r="35" /> <circle class="v-main" cx="260" cy="60" r="35" /> <circle class="v-open" cx="340" cy="60" r="18" />
+            <circle class="v-main" cx="60" cy="160" r="35" /> <circle class="v-main" cx="160" cy="160" r="35" /> <circle class="v-main" cx="260" cy="160" r="35" /> <circle class="v-open" cx="340" cy="160" r="18" />
+            <circle class="v-main" cx="60" cy="260" r="35" /> <circle class="v-main" cx="160" cy="260" r="35" /> <circle class="v-main" cx="260" cy="260" r="35" /> <circle class="v-open" cx="340" cy="260" r="18" />
+            <circle class="v-main" cx="60" cy="360" r="35" /> <circle class="v-main" cx="160" cy="360" r="35" /> <circle class="v-main" cx="260" cy="360" r="35" /> <circle class="v-open" cx="340" cy="360" r="18" />
         </svg>
-        <svg width="260" height="260" class="hand-pad">
-            <circle class="v-open" cx="25" cy="40" r="15" /> <circle class="v-main" cx="80" cy="40" r="30" /> <circle class="v-main" cx="150" cy="40" r="30" /> <circle class="v-main" cx="220" cy="40" r="30" />
-            <circle class="v-open" cx="25" cy="110" r="15" /> <circle class="v-main" cx="80" cy="110" r="30" /> <circle class="v-main" cx="150" cy="110" r="30" /> <circle class="v-main" cx="220" cy="110" r="30" />
-            <circle class="v-open" cx="25" cy="180" r="15" /> <circle class="v-main" cx="80" cy="180" r="30" /> <circle class="v-main" cx="150" cy="180" r="30" /> <circle class="v-main" cx="220" cy="180" r="30" />
+
+        <svg viewBox="0 0 400 400" class="hand-pad">
+            <circle class="v-open" cx="60" cy="60" r="18" /> <circle class="v-main" cx="140" cy="60" r="35" /> <circle class="v-main" cx="240" cy="60" r="35" /> <circle class="v-main" cx="340" cy="60" r="35" />
+            <circle class="v-open" cx="60" cy="160" r="18" /> <circle class="v-main" cx="140" cy="160" r="35" /> <circle class="v-main" cx="240" cy="160" r="35" /> <circle class="v-main" cx="340" cy="160" r="35" />
+            <circle class="v-open" cx="60" cy="260" r="18" /> <circle class="v-main" cx="140" cy="260" r="35" /> <circle class="v-main" cx="240" cy="260" r="35" /> <circle class="v-main" cx="340" cy="260" r="35" />
+            <circle class="v-open" cx="60" cy="360" r="18" /> <circle class="v-main" cx="140" cy="360" r="35" /> <circle class="v-main" cx="240" cy="360" r="35" /> <circle class="v-main" cx="340" cy="360" r="35" />
         </svg>
     </div>
 </div>
 
-<canvas id="oscillo"></canvas>
-
 <script>
-// --- IMMUTABLE LOGIC RESTORATION ---
-const ASSET_URL = "https://radraybirdmusic.github.io/radapps/buzz.wav";
-let audioCtx, analyzer, source, recorder, chunks = [];
-let audioBlob, audioUrl, isLock = false, isFae = false, intensities = {l:0.5, r:0.5};
+let p5cnv;
+let audioCtx;
+let mic, fft, mediaRecorder;
+let chunks = [];
+let audioUrl = null;
+let playbackAudio = null;
 
-const canvas = document.getElementById('oscillo');
-const ctx = canvas.getContext('2d');
-const btnMic = document.getElementById('btn-mic');
-const btnRec = document.getElementById('btn-rec');
-const btnFile = document.getElementById('btn-file');
-const btnPlay = document.getElementById('btn-play');
+let isRecording = false;
+let hasRecorded = false;
+let isCountingDown = false;
+let recordTimer, countdownTimer;
+let savedWaveform = [];
 
-// IGNITE: Handshake & Reveal
-btnMic.onclick = async () => {
-    document.getElementById('gate').style.display = 'none';
-    document.getElementById('ui').style.display = 'block';
-    try {
+let step = 0; 
+let isLock = false, isFae = false, intensities = {l:0.5, r:0.5};
+
+function setup() {
+    p5cnv = createCanvas(windowWidth, windowHeight);
+    p5cnv.style('position', 'absolute');
+    p5cnv.style('inset', '0');
+    p5cnv.style('z-index', '9999'); 
+    
+    fft = new p5.FFT();
+}
+
+function touchStarted() { handleInt(); return false; }
+function mousePressed() { if (touches.length === 0) handleInt(); }
+
+function handleInt() {
+    if (step === 0) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        source = audioCtx.createMediaStreamSource(stream);
-        analyzer = audioCtx.createAnalyser();
-        analyzer.fftSize = 2048;
-        source.connect(analyzer);
-        recorder = new MediaRecorder(stream);
-        recorder.ondataavailable = e => chunks.push(e.data);
-        recorder.onstop = exportWav;
-        drawOscilloscope();
-    } catch (err) { console.error("Mic restricted:", err); }
-};
+        
+        mic = new p5.AudioIn();
+        mic.start(() => {
+            userStartAudio();
+            fft.setInput(mic);
+            step = 1;
+            
+            // DROP CANVAS
+            p5cnv.style('z-index', '1');
+            p5cnv.style('pointer-events', 'none');
+            document.getElementById('ui').style.display = 'block';
+            
+            setTimeout(() => {
+                if (mic.stream) {
+                    mediaRecorder = new MediaRecorder(mic.stream);
+                    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+                    mediaRecorder.onstop = () => {
+                        let blob = new Blob(chunks); 
+                        audioUrl = URL.createObjectURL(blob);
+                        let playBtn = document.getElementById('btn-play');
+                        playBtn.disabled = false;
+                        playBtn.style.opacity = 1;
+                    };
+                    document.getElementById('btn-rec').style.borderColor = "#fff";
+                }
+            }, 500);
+        }, (err) => {
+            // IF BLOCKED, STILL DROP CANVAS FOR FILE LOADER
+            step = 1;
+            p5cnv.style('z-index', '1');
+            p5cnv.style('pointer-events', 'none');
+            document.getElementById('ui').style.display = 'block';
+            
+            alert("Live Mic is blocked by this environment. You can still use the Load (📁) button!");
+        });
+    }
+}
 
-// BUZZ BUTTON: Mic Recording
-btnRec.onclick = () => {
-    if (recorder.state === "inactive") {
-        chunks = [];
-        recorder.start();
-        document.getElementById('rec-label').innerText = "STOP";
-        btnPlay.disabled = true;
+// --- 📁 FILE LOADER LOGIC ---
+function handleAudioInput(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    let loadBtn = document.getElementById('btn-load');
+    let loadLabel = document.getElementById('load-label');
+    let playBtn = document.getElementById('btn-play');
+
+    loadLabel.innerText = "WAIT";
+    loadBtn.style.borderColor = "var(--zoot-orange)";
+    
+    isRecording = false;
+    document.getElementById('btn-rec').style.borderColor = "#555";
+    document.getElementById('rec-label').innerText = "LIVE";
+
+    audioUrl = URL.createObjectURL(file);
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        audioCtx.decodeAudioData(ev.target.result, function(buffer) {
+            const channelData = buffer.getChannelData(0);
+            
+            let boxW = windowWidth * 0.5;
+            const stepVal = Math.ceil(channelData.length / boxW);
+            
+            let tempPeaks = [];
+            let globalMax = 0.01; 
+            
+            for (let i = 0; i < channelData.length; i += stepVal) {
+                let max = 0;
+                for (let j = 0; j < stepVal && i + j < channelData.length; j++) {
+                    if (Math.abs(channelData[i + j]) > max) max = Math.abs(channelData[i + j]);
+                }
+                if (max > globalMax) globalMax = max;
+                tempPeaks.push(max);
+            }
+            
+            savedWaveform = tempPeaks.map(p => (p / globalMax) * 0.95);
+            
+            hasRecorded = true;
+            loadLabel.innerText = "READY";
+            loadBtn.style.borderColor = "#0f0";
+            playBtn.disabled = false;
+            playBtn.style.opacity = 1;
+        }, function(err) {
+            loadLabel.innerText = "ERR";
+            loadBtn.style.borderColor = "red";
+        });
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// --- 🐝 LIVE MIC LOGIC ---
+function toggleRecord() {
+    if (!mediaRecorder) {
+        alert("Live Mic is blocked here! Test this on GitHub Pages to unlock it.");
+        return;
+    }
+    
+    let recBtn = document.getElementById('btn-rec');
+    let recLabel = document.getElementById('rec-label');
+    let loadBtn = document.getElementById('btn-load');
+    let playBtn = document.getElementById('btn-play');
+
+    if (isRecording) {
+        stopRecording();
+        return;
+    }
+
+    if (isCountingDown) {
+        clearInterval(countdownTimer);
+        isCountingDown = false;
+        recLabel.innerText = "LIVE";
+        recBtn.style.borderColor = "#fff";
+        playBtn.disabled = hasRecorded ? false : true;
+        return;
+    }
+
+    loadBtn.style.borderColor = "#555";
+    document.getElementById('load-label').innerText = "LOAD";
+
+    isCountingDown = true;
+    let count = 4;
+    recLabel.innerText = "WAIT " + count;
+    recBtn.style.borderColor = "var(--zoot-orange)";
+    playBtn.disabled = true;
+    playBtn.style.opacity = 0.5;
+    
+    chunks = []; 
+    savedWaveform = []; 
+    hasRecorded = false;
+
+    countdownTimer = setInterval(() => {
+        count--;
+        if (count > 0) {
+            recLabel.innerText = "WAIT " + count;
+        } else {
+            clearInterval(countdownTimer);
+            isCountingDown = false;
+            
+            mediaRecorder.start(); 
+            isRecording = true;
+            recLabel.innerText = "REC";
+            recBtn.style.borderColor = "#0f0"; 
+            
+            recordTimer = setTimeout(() => {
+                if (isRecording) stopRecording();
+            }, 7000);
+        }
+    }, 1000); 
+}
+
+function stopRecording() {
+    mediaRecorder.stop(); 
+    isRecording = false;
+    hasRecorded = true;
+    
+    let recBtn = document.getElementById('btn-rec');
+    let recLabel = document.getElementById('rec-label');
+    
+    recLabel.innerText = "DONE"; 
+    recBtn.style.borderColor = "#9d00ff"; 
+    clearTimeout(recordTimer);
+}
+
+function playAudio() {
+    if (audioCtx && audioCtx.state !== 'running') {
+        audioCtx.resume();
+    }
+
+    let playBtn = document.getElementById('btn-play');
+
+    if (playbackAudio && !playbackAudio.paused) {
+        playbackAudio.pause();
+        playbackAudio.currentTime = 0;
+        playBtn.innerText = "PLAY ▶";
     } else {
-        recorder.stop();
-        document.getElementById('rec-label').innerText = "BUZZ";
+        if (!audioUrl) return;
+        
+        playbackAudio = new Audio(audioUrl);
+        playbackAudio.play();
+        playBtn.innerText = "STOP ■";
+        
+        playbackAudio.onended = () => {
+            playBtn.innerText = "PLAY ▶";
+        };
     }
-};
-
-// FILE BUTTON: Hosted GitHub Fetch
-btnFile.onclick = async () => {
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-    try {
-        const response = await fetch(ASSET_URL);
-        const arrayBuffer = await response.arrayBuffer();
-        const decoded = await audioCtx.decodeAudioData(arrayBuffer);
-        audioBlob = new Blob([arrayBuffer], { type: 'audio/wav' });
-        audioUrl = URL.createObjectURL(audioBlob);
-        btnPlay.disabled = false;
-        btnPlay.style.opacity = 1;
-        alert("GitHub Asset Loaded.");
-    } catch (e) { alert("File Load Failed."); }
-};
-
-function exportWav() {
-    audioBlob = new Blob(chunks, { type: 'audio/wav' });
-    audioUrl = URL.createObjectURL(audioBlob);
-    btnPlay.disabled = false;
-    btnPlay.style.opacity = 1;
 }
 
-btnPlay.onclick = () => {
-    const audio = new Audio(audioUrl);
-    audio.play();
-};
+// --- P5 VISUALIZER DRAW LOOP ---
+function draw() {
+    clear(); 
+    
+    if (step === 0) {
+        background(0);
+        rectMode(CENTER);
+        fill(17);
+        stroke('#9d00ff');
+        strokeWeight(2);
+        rect(width/2, height/2, 280, 80, 12);
+        
+        fill(255);
+        noStroke();
+        textAlign(CENTER, CENTER);
+        textSize(24);
+        textStyle(BOLD);
+        text("TAP TO IGNITE", width/2, height/2);
 
-function drawOscilloscope() {
-    requestAnimationFrame(drawOscilloscope);
-    if (!analyzer) return;
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    const bufferLength = analyzer.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyzer.getByteTimeDomainData(dataArray);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = isFae ? "#0ff" : "#9d00ff";
-    ctx.beginPath();
-    const sliceWidth = canvas.width / bufferLength;
-    let x = 0;
-    for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = v * canvas.height / 2;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        x += sliceWidth;
+    } else if (step === 1) {
+        let boxW = windowWidth * 0.5;
+        let boxH = 60;
+        let boxX = (windowWidth - boxW) / 2;
+        let boxY = 190; 
+
+        // Monitor Background
+        fill(20, 20, 20, 180);
+        stroke(50);
+        strokeWeight(2);
+        rectMode(CORNER);
+        rect(boxX, boxY, boxW, boxH, 8);
+
+        strokeWeight(2);
+        noFill();
+
+        if (isRecording) {
+            let wave = fft.waveform();
+            stroke(isFae ? '#0ff' : '#9d00ff');
+            beginShape();
+            for (let i = 0; i < wave.length; i++) {
+                let x = map(i, 0, wave.length, boxX, boxX + boxW);
+                let y = map(wave[i], -1, 1, boxY + boxH, boxY);
+                vertex(x, y);
+            }
+            endShape();
+
+            if (frameCount % 3 === 0) {
+                let maxVal = 0;
+                for(let i=0; i<wave.length; i++) {
+                    if(abs(wave[i]) > maxVal) maxVal = abs(wave[i]);
+                }
+                savedWaveform.push(maxVal * 2.0); 
+            }
+        } 
+        else if (hasRecorded && savedWaveform.length > 0) {
+            let isPlaying = playbackAudio && !playbackAudio.paused;
+            let timeWiggle = millis() / 40; 
+
+            fill(isFae ? color(0, 255, 255, 150) : color(157, 0, 255, 150));
+            noStroke();
+            beginShape();
+            
+            for (let i = 0; i < savedWaveform.length; i++) {
+                let x = map(i, 0, savedWaveform.length, boxX, boxX + boxW);
+                let amp = min(0.95, savedWaveform[i]); 
+                if (isPlaying) amp += sin(timeWiggle + i * 0.8) * 0.15 * amp;
+                let y = boxY + boxH/2 - (amp * boxH/2);
+                vertex(x, y);
+            }
+            
+            for (let i = savedWaveform.length - 1; i >= 0; i--) {
+                let x = map(i, 0, savedWaveform.length, boxX, boxX + boxW);
+                let amp = min(0.95, savedWaveform[i]);
+                if (isPlaying) amp += cos(timeWiggle + i * 0.8) * 0.15 * amp;
+                let y = boxY + boxH/2 + (amp * boxH/2);
+                vertex(x, y);
+            }
+            endShape(CLOSE);
+
+            if (isPlaying) {
+                let progress = playbackAudio.currentTime / playbackAudio.duration;
+                if (!isNaN(progress)) {
+                    let px = boxX + (progress * boxW);
+                    stroke(255, 100, 0); 
+                    strokeWeight(3);
+                    line(px, boxY, px, boxY + boxH);
+                }
+            }
+        } else {
+            stroke(100);
+            strokeWeight(1);
+            line(boxX, boxY + boxH/2, boxX + boxW, boxY + boxH/2);
+        }
     }
-    ctx.stroke();
 }
 
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+
+// SLIDER INTERACTION
 function slide(e, side) {
     if (isLock || (e.buttons !== 1 && !e.touches)) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -176,11 +402,22 @@ function slide(e, side) {
     let v = 1 - (y - r.top) / r.height;
     intensities[side] = Math.max(0, Math.min(1.5, v * 1.5));
     document.getElementById(side + '-fill').style.height = (intensities[side] / 1.5) * 100 + "%";
-    if (Math.max(intensities.l, intensities.r) > 1.0) { document.body.classList.add('fae-mode'); isFae = true; }
-    else { document.body.classList.remove('fae-mode'); isFae = false; }
+    
+    if (Math.max(intensities.l, intensities.r) > 1.0) { 
+        document.body.classList.add('fae-mode'); 
+        isFae = true; 
+    } else { 
+        document.body.classList.remove('fae-mode'); 
+        isFae = false; 
+    }
 }
 
-function toggleLock() { isLock = !isLock; document.getElementById('p-lock').innerText = isLock ? "LOCK: ON" : "LOCK: OFF"; }
+function toggleLock() { 
+    isLock = !isLock; 
+    let btn = document.getElementById('p-lock');
+    btn.innerText = isLock ? "LOCK: ON" : "LOCK: OFF"; 
+    btn.style.borderColor = isLock ? "#0f0" : "var(--neon-purple)";
+}
 </script>
 </body>
 </html>
