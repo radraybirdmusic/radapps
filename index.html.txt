@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v1.60</title>
+    <style>
+        :root { --neon-purple: #9d00ff; --zoot-orange: #FF4500; --buzz-green: #0f0; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
+        .fae-mode { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        
+        #gate { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        #ui { position: absolute; inset: 0; z-index: 100; display: none; }
+        
+        #header { width: 100%; height: 60px; background: rgba(10,10,10,0.95); display: flex; align-items: center; justify-content: center; gap: 20px; border-bottom: 2px solid #333; }
+        .btn { background: #111; border: 2px solid var(--neon-purple); color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        #control-layer { position: absolute; top: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; z-index: 200; }
+        .hub-unit { width: 110px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .hub-btn { width: 80px; height: 80px; border-radius: 50%; background: #111; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; z-index: 5; }
+        .hub-label { font-size: 10px; font-weight: bold; margin-top: 8px; letter-spacing: 1px; }
+
+        #ring-svg { position: absolute; top: 2px; pointer-events: none; z-index: 10; }
+        #ring-path { fill: none; stroke: var(--buzz-green); stroke-width: 5; stroke-dasharray: 251.3; stroke-dashoffset: 251.3; transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 0.1s linear; }
+
+        .pad-container { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; pointer-events: none; }
+        .hand-pad { pointer-events: auto; }
+        .v-main { fill: none; stroke: #fff; stroke-width: 3; }
+        .v-open { fill: none; stroke: #fff; stroke-width: 2; }
+
+        .slider { position: absolute; width: 45px; height: 250px; background: #111; border: 2px solid #555; border-radius: 22px; top: 210px; pointer-events: auto; }
+        #l-slider { left: 4%; } #r-slider { right: 4%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--zoot-orange), #fff); border-radius: 22px; pointer-events: none; }
+
+        #oscillo { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="gate"><button id="btn-mic" class="btn" style="font-size: 24px; padding: 30px 60px;">IGNITE</button></div>
+
+<div id="ui">
+    <div id="header">
+        <button id="p-lock" class="btn" onclick="toggleLock()">LOCK: OFF</button>
+        <button id="btn-play" class="btn" disabled>PLAY ▶</button>
+    </div>
+
+    <div id="control-layer">
+        <div class="hub-unit">
+            <button id="btn-rec" class="hub-btn">🐝</button>
+            <svg id="ring-svg" width="90" height="90"><circle id="ring-path" cx="45" cy="45" r="40" /></svg>
+            <div class="hub-label" id="rec-label">REC</div>
+        </div>
+        <div class="hub-unit">
+            <button id="btn-file" class="hub-btn">📂</button>
+            <div class="hub-label" id="file-label">LOAD</div>
+        </div>
+    </div>
+
+    <div id="l-slider" class="slider" onpointerdown="slide(event, 'l')" onpointermove="slide(event, 'l')"><div id="l-fill" class="fill" style="height: 50%"></div></div>
+    <div id="r-slider" class="slider" onpointerdown="slide(event, 'r')" onpointermove="slide(event, 'r')"><div id="r-fill" class="fill" style="height: 50%"></div></div>
+
+    <div class="pad-container">
+        <svg width="240" height="240" class="hand-pad">
+            <circle class="v-main" cx="40" cy="40" r="30" /> <circle class="v-main" cx="110" cy="40" r="30" /> <circle class="v-main" cx="180" cy="40" r="30" /> <circle class="v-open" cx="230" cy="40" r="10" />
+            <circle class="v-main" cx="40" cy="110" r="30" /> <circle class="v-main" cx="110" cy="110" r="30" /> <circle class="v-main" cx="180" cy="110" r="30" /> <circle class="v-open" cx="230" cy="110" r="10" />
+            <circle class="v-main" cx="40" cy="180" r="30" /> <circle class="v-main" cx="110" cy="180" r="30" /> <circle class="v-main" cx="180" cy="180" r="30" /> <circle class="v-open" cx="230" cy="180" r="10" />
+        </svg>
+        <svg width="240" height="240" class="hand-pad">
+            <circle class="v-open" cx="10" cy="40" r="10" /> <circle class="v-main" cx="60" cy="40" r="30" /> <circle class="v-main" cx="130" cy="40" r="30" /> <circle class="v-main" cx="200" cy="40" r="30" />
+            <circle class="v-open" cx="10" cy="110" r="10" /> <circle class="v-main" cx="60" cy="110" r="30" /> <circle class="v-main" cx="130" cy="110" r="30" /> <circle class="v-main" cx="200" cy="110" r="30" />
+            <circle class="v-open" cx="10" cy="180" r="10" /> <circle class="v-main" cx="60" cy="180" r="30" /> <circle class="v-main" cx="130" cy="180" r="30" /> <circle class="v-main" cx="200" cy="180" r="30" />
+        </svg>
+    </div>
+</div>
+
+<canvas id="oscillo"></canvas>
+
+<script>
+const ASSET_URL = "https://radraybirdmusic.github.io/radapps/buzz.wav";
+let audioCtx, analyzer, source, recorder, chunks = [];
+let audioBlob, audioUrl, isLock = false, isFae = false, intensities = {l:0.5, r:0.5};
+
+const canvas = document.getElementById('oscillo');
+const ctx = canvas.getContext('2d');
+const btnMic = document.getElementById('btn-mic');
+const btnRec = document.getElementById('btn-rec');
+const btnFile = document.getElementById('btn-file');
+const btnPlay = document.getElementById('btn-play');
+
+btnMic.onclick = async () => {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('ui').style.display = 'block';
+    try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        source = audioCtx.createMediaStreamSource(stream);
+        analyzer = audioCtx.createAnalyser();
+        analyzer.fftSize = 2048;
+        source.connect(analyzer);
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = () => {
+            audioBlob = new Blob(chunks, { type: 'audio/wav' });
+            audioUrl = URL.createObjectURL(audioBlob);
+            btnPlay.disabled = false;
+            btnPlay.style.opacity = 1;
+        };
+        drawOscilloscope();
+    } catch (err) { console.error("Handshake failed:", err); }
+};
+
+btnRec.onclick = () => {
+    if (recorder.state === "inactive") {
+        const ring = document.getElementById('ring-path');
+        const label = document.getElementById('rec-label');
+        let count = 4;
+        const countdown = setInterval(() => {
+            label.innerText = "WAIT " + count;
+            if (count-- <= 0) {
+                clearInterval(countdown);
+                label.innerText = "RECORDING";
+                ring.style.display = "block";
+                chunks = [];
+                recorder.start();
+                let p = 0;
+                const progress = setInterval(() => {
+                    p += 1.42; 
+                    ring.style.strokeDashoffset = 251.3 - (251.3 * (p / 100));
+                    if (p >= 100) {
+                        clearInterval(progress);
+                        recorder.stop();
+                        ring.style.display = "none";
+                        label.innerText = "SET 🔒";
+                    }
+                }, 100);
+            }
+        }, 500);
+    }
+};
+
+btnFile.onclick = async () => {
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    document.getElementById('file-label').innerText = "FETCHING...";
+    try {
+        const resp = await fetch(ASSET_URL);
+        const buf = await resp.arrayBuffer();
+        audioBlob = new Blob([buf], { type: 'audio/wav' });
+        audioUrl = URL.createObjectURL(audioBlob);
+        btnPlay.disabled = false;
+        btnPlay.style.opacity = 1;
+        document.getElementById('file-label').innerText = "LOADED ✅";
+    } catch (e) { alert("GitHub Load Failed"); }
+};
+
+btnPlay.onclick = () => {
+    const audio = new Audio(audioUrl);
+    audio.play();
+    btnPlay.innerText = "STOP ■";
+    audio.onended = () => { btnPlay.innerText = "PLAY ▶"; };
+};
+
+function drawOscilloscope() {
+    requestAnimationFrame(drawOscilloscope);
+    if (!analyzer) return;
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const bufferLength = analyzer.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyzer.getByteTimeDomainData(dataArray);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = isFae ? "#0ff" : "#9d00ff";
+    ctx.beginPath();
+    const sliceWidth = canvas.width / bufferLength;
+    let x = 0;
+    for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * canvas.height / 2;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        x += sliceWidth;
+    }
+    ctx.stroke();
+}
+
+function slide(e, side) {
+    if (isLock || (e.buttons !== 1 && !e.touches)) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    let v = 1 - (y - r.top) / r.height;
+    intensities[side] = Math.max(0, Math.min(1.5, v * 1.5));
+    document.getElementById(side + '-fill').style.height = (intensities[side] / 1.5) * 100 + "%";
+    if (intensities.l > 1.0 || intensities.r > 1.0) { document.body.classList.add('fae-mode'); isFae = true; }
+    else { document.body.classList.remove('fae-mode'); isFae = false; }
+}
+
+function toggleLock() { 
+    isLock = !isLock; 
+    document.getElementById('p-lock').innerText = isLock ? "LOCK: ON" : "LOCK: OFF"; 
+}
+</script>
+</body>
+</html>
