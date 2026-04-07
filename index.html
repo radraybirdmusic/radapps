@@ -15,14 +15,19 @@
         #header { width: 100%; height: 60px; background: rgba(10,10,10,0.95); display: flex; align-items: center; justify-content: center; gap: 20px; border-bottom: 2px solid #333; }
         .btn { background: #111; border: 2px solid var(--neon-purple); color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-        #buzz-hub-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; z-index: 200; cursor: pointer; }
+        /* THE TWO-BUTTON INTERFACE */
+        #control-layer { position: absolute; top: 80px; width: 100%; display: flex; justify-content: center; gap: 60px; z-index: 200; }
         
+        .hub-unit { width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; }
+        .hub-btn { width: 80px; height: 80px; border-radius: 50%; background: #111; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 0 15px var(--neon-purple); }
+        .hub-label { font-size: 10px; font-weight: bold; margin-top: 5px; color: #fff; }
+
         .pad-container { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; pointer-events: none; }
         .hand-pad { pointer-events: auto; }
         .v-main { fill: none; stroke: #fff; stroke-width: 3; filter: drop-shadow(0 0 8px var(--neon-purple)); }
         .v-open { fill: none; stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 5px var(--neon-purple)); }
 
-        .slider { position: absolute; width: 45px; height: 250px; background: #111; border: 2px solid #555; border-radius: 22px; top: 150px; pointer-events: auto; }
+        .slider { position: absolute; width: 45px; height: 250px; background: #111; border: 2px solid #555; border-radius: 22px; top: 180px; pointer-events: auto; }
         #l-slider { left: 4%; } #r-slider { right: 4%; }
         .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--zoot-orange), #fff); border-radius: 22px; pointer-events: none; }
 
@@ -41,10 +46,15 @@
         <button id="btn-play" class="btn" disabled>PLAY ▶</button>
     </div>
 
-    <div id="buzz-hub-container">
-        <button id="btn-rec" style="width:100%; height:100%; border-radius:50%; background:#111; border:2px solid #fff; color:#fff; cursor:pointer;" disabled>
-            <span style="font-size:30px;">🐝</span><br><span id="rec-label" style="font-size:10px;">LOAD</span>
-        </button>
+    <div id="control-layer">
+        <div class="hub-unit" id="buzz-unit">
+            <button id="btn-rec" class="hub-btn">🐝</button>
+            <div class="hub-label" id="rec-label">BUZZ</div>
+        </div>
+        <div class="hub-unit" id="file-unit">
+            <button id="btn-file" class="hub-btn">📂</button>
+            <div class="hub-label">FILE</div>
+        </div>
     </div>
 
     <div id="l-slider" class="slider" onpointerdown="slide(event, 'l')" onpointermove="slide(event, 'l')"><div id="l-fill" class="fill" style="height: 50%"></div></div>
@@ -67,58 +77,80 @@
 <canvas id="oscillo"></canvas>
 
 <script>
+// --- IMMUTABLE LOGIC RESTORATION ---
 const ASSET_URL = "https://radraybirdmusic.github.io/radapps/buzz.wav";
-let audioCtx, analyzer, source, audioBuffer, isLock = false, isFae = false, intensities = {l:0.5, r:0.5};
+let audioCtx, analyzer, source, recorder, chunks = [];
+let audioBlob, audioUrl, isLock = false, isFae = false, intensities = {l:0.5, r:0.5};
 
 const canvas = document.getElementById('oscillo');
 const ctx = canvas.getContext('2d');
 const btnMic = document.getElementById('btn-mic');
 const btnRec = document.getElementById('btn-rec');
+const btnFile = document.getElementById('btn-file');
 const btnPlay = document.getElementById('btn-play');
 
+// IGNITE: Handshake & Reveal
 btnMic.onclick = async () => {
     document.getElementById('gate').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
     try {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        btnRec.disabled = false;
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        source = audioCtx.createMediaStreamSource(stream);
+        analyzer = audioCtx.createAnalyser();
+        analyzer.fftSize = 2048;
+        source.connect(analyzer);
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = exportWav;
         drawOscilloscope();
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Mic restricted:", err); }
 };
 
-btnRec.onclick = async () => {
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-    document.getElementById('rec-label').innerText = "FETCHING";
-    try {
-        const response = await fetch(ASSET_URL);
-        const arrayBuffer = await response.arrayBuffer();
-        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        document.getElementById('rec-label').innerText = "SET 🔒";
-        btnPlay.disabled = false;
-        btnPlay.style.opacity = 1;
-    } catch (e) {
-        alert("Audio load failed.");
-        document.getElementById('rec-label').innerText = "FAIL";
+// BUZZ BUTTON: Mic Recording
+btnRec.onclick = () => {
+    if (recorder.state === "inactive") {
+        chunks = [];
+        recorder.start();
+        document.getElementById('rec-label').innerText = "STOP";
+        btnPlay.disabled = true;
+    } else {
+        recorder.stop();
+        document.getElementById('rec-label').innerText = "BUZZ";
     }
 };
 
+// FILE BUTTON: Hosted GitHub Fetch
+btnFile.onclick = async () => {
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    try {
+        const response = await fetch(ASSET_URL);
+        const arrayBuffer = await response.arrayBuffer();
+        const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+        audioBlob = new Blob([arrayBuffer], { type: 'audio/wav' });
+        audioUrl = URL.createObjectURL(audioBlob);
+        btnPlay.disabled = false;
+        btnPlay.style.opacity = 1;
+        alert("GitHub Asset Loaded.");
+    } catch (e) { alert("File Load Failed."); }
+};
+
+function exportWav() {
+    audioBlob = new Blob(chunks, { type: 'audio/wav' });
+    audioUrl = URL.createObjectURL(audioBlob);
+    btnPlay.disabled = false;
+    btnPlay.style.opacity = 1;
+}
+
 btnPlay.onclick = () => {
-    if (!audioBuffer) return;
-    const playSource = audioCtx.createBufferSource();
-    playSource.buffer = audioBuffer;
-    analyzer = audioCtx.createAnalyser();
-    playSource.connect(analyzer);
-    analyzer.connect(audioCtx.destination);
-    playSource.start(0);
-    btnPlay.innerText = "STOP ■";
-    playSource.onended = () => { btnPlay.innerText = "PLAY ▶"; };
+    const audio = new Audio(audioUrl);
+    audio.play();
 };
 
 function drawOscilloscope() {
     requestAnimationFrame(drawOscilloscope);
     if (!analyzer) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     const bufferLength = analyzer.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     analyzer.getByteTimeDomainData(dataArray);
@@ -131,8 +163,7 @@ function drawOscilloscope() {
     for (let i = 0; i < bufferLength; i++) {
         const v = dataArray[i] / 128.0;
         const y = v * canvas.height / 2;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         x += sliceWidth;
     }
     ctx.stroke();
@@ -149,10 +180,7 @@ function slide(e, side) {
     else { document.body.classList.remove('fae-mode'); isFae = false; }
 }
 
-function toggleLock() { 
-    isLock = !isLock; 
-    document.getElementById('p-lock').innerText = isLock ? "LOCK: ON" : "LOCK: OFF"; 
-}
+function toggleLock() { isLock = !isLock; document.getElementById('p-lock').innerText = isLock ? "LOCK: ON" : "LOCK: OFF"; }
 </script>
 </body>
 </html>
