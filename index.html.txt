@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v2.10</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
+        #ui { position: absolute; inset: 0; z-index: 100; background: #000; width: 100vw; height: 100vh; }
+        #header { position: absolute; top: 0; width: 100%; height: 130px; background: #111; border-bottom: 3px solid #333; z-index: 500; }
+        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 90px; padding: 5px; }
+        .nav-group { display: flex; align-items: center; gap: 8px; }
+        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 8px; font-weight: bold; font-size: 11px; text-align: center; height: 45px; width: 70px; cursor: pointer; }
+        .mini-btn { width: 50px; height: 50px; border-radius: 50%; background: #222; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
+        .pad-grid { position: absolute; bottom: 20px; width: 42%; height: auto; z-index: 200; pointer-events: auto; }
+        #pad-left { left: 8%; } #pad-right { right: 8%; }
+        #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+        #diag { width: 100%; text-align: center; font-size: 10px; color: var(--g); padding-top: 5px; font-weight: bold; }
+        .active-piston { stroke-width: 5; transition: stroke 0.1s; }
+    </style>
+</head>
+<body>
+<div id="ui">
+    <div id="header">
+        <div class="nav-container">
+            <div class="nav-group"><button id="b-rec" class="mini-btn">🐝</button></div>
+            <div class="nav-group"><button id="p-lock" class="btn">LOCK</button><button id="b-save" class="btn" style="border-color:#44aaff; color:#44aaff;">SAVE</button></div>
+            <div class="nav-group"><button id="b-file" class="mini-btn">📂</button></div>
+        </div>
+        <div id="diag">STATUS: v2.10 VECTOR ENGINE READY</div>
+        <input type="file" id="f-in" hidden accept="*">
+    </div>
+
+    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none" id="l-group">
+            <circle class="v-pad" cx="30" cy="35" r="20" data-note="1.0"/><circle class="v-pad" cx="80" cy="35" r="20" data-note="1.1"/><circle class="v-pad" cx="130" cy="35" r="20" data-note="1.2"/><circle class="v-pad" cx="180" cy="35" r="6" data-note="1.5"/>
+            <circle class="v-pad" cx="30" cy="90" r="20" data-note="0.8"/><circle class="v-pad" cx="80" cy="90" r="20" data-note="0.9"/><circle class="v-pad" cx="130" cy="90" r="20" data-note="1.0"/><circle class="v-pad" cx="180" cy="90" r="6" data-note="1.2"/>
+            <circle class="v-pad" cx="30" cy="145" r="20" data-note="0.6"/><circle class="v-pad" cx="80" cy="145" r="20" data-note="0.7"/><circle class="v-pad" cx="130" cy="145" r="20" data-note="0.8"/><circle class="v-pad" cx="180" cy="145" r="6" data-note="1.0"/>
+        </g>
+    </svg>
+
+    <svg id="pad-right" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none" id="r-group">
+            <circle class="v-pad" cx="40" cy="35" r="6" data-note="1.5"/><circle class="v-pad" cx="90" cy="35" r="20" data-note="1.2"/><circle class="v-pad" cx="140" cy="35" r="20" data-note="1.1"/><circle class="v-pad" cx="190" cy="35" r="20" data-note="1.0"/>
+            <circle class="v-pad" cx="40" cy="90" r="6" data-note="1.2"/><circle class="v-pad" cx="90" cy="90" r="20" data-note="1.0"/><circle class="v-pad" cx="140" cy="90" r="20" data-note="0.9"/><circle class="v-pad" cx="190" cy="90" r="20" data-note="0.8"/>
+            <circle class="v-pad" cx="40" cy="145" r="6" data-note="1.0"/><circle class="v-pad" cx="90" cy="145" r="20" data-note="0.8"/><circle class="v-pad" cx="140" cy="145" r="20" data-note="0.7"/><circle class="v-pad" cx="190" cy="145" r="20" data-note="0.6"/>
+        </g>
+    </svg>
+</div>
+<canvas id="osc"></canvas>
+<script>
+let aCtx, anal, masterBus, virtualCache = null, activeSources = [];
+
+// Initialize Audio Context on Start
+window.addEventListener('pointerdown', async () => {
+    if (!aCtx) {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        anal = aCtx.createAnalyser(); 
+        masterBus = aCtx.createMediaStreamDestination();
+        anal.connect(aCtx.destination);
+        draw();
+    }
+}, {once: true});
+
+// 360 DEGREE JOYSTICK / VECTOR LOGIC
+document.querySelectorAll('.v-pad').forEach(piston => {
+    piston.addEventListener('pointermove', (e) => {
+        if (e.buttons !== 1 && !e.touches) return;
+        handleVector(e, piston);
+    });
+    piston.addEventListener('pointerdown', (e) => handleVector(e, piston));
+    piston.addEventListener('pointerup', () => piston.setAttribute('stroke', '#fff'));
+});
+
+function handleVector(e, piston) {
+    if (!virtualCache || !aCtx) return;
+    const rect = piston.getBoundingClientRect();
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    const dx = e.clientX - cx, dy = e.clientY - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    
+    // Throttle / Vector calculation
+    const throttle = Math.min(1.5, dist / (rect.width/2)); // 0 to 1.5 intensity
+    const angle = Math.atan2(dy, dx); // 360 degree direction
+    
+    // Power the Signal
+    strikeVector(parseFloat(piston.getAttribute('data-note')), throttle, angle);
+    
+    // Chakra Spectral Feedback
+    const hue = (angle * (180/Math.PI) + 180);
+    piston.setAttribute('stroke', `hsl(${hue}, 100%, 50%)`);
+}
+
+async function strikeVector(basePitch, throttle, angle) {
+    if (aCtx.state === 'suspended') await aCtx.resume();
+    const res = await fetch(virtualCache);
+    const ab = await res.arrayBuffer();
+    aCtx.decodeAudioData(ab, (buffer) => {
+        const s = aCtx.createBufferSource();
+        const g = aCtx.createGain();
+        s.buffer = buffer;
+        
+        // Analog Frequency Shift based on Angle + Throttle
+        s.playbackRate.value = basePitch + (Math.sin(angle) * (throttle * 0.2));
+        
+        // Voltage based on Throttle distance
+        g.gain.setValueAtTime(throttle * 0.5, aCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime + 1.0);
+        
+        s.connect(g); g.connect(anal); g.connect(masterBus);
+        s.start(0);
+        activeSources.push(s);
+    });
+}
+
+function draw() {
+    requestAnimationFrame(draw); if (!anal) return;
+    const cvs = document.getElementById('osc'); const ctx = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    const timeData = new Uint8Array(anal.frequencyBinCount);
+    const freqData = new Uint8Array(anal.frequencyBinCount);
+    anal.getByteTimeDomainData(timeData);
+    anal.getByteFrequencyData(freqData);
+    let avg = freqData.reduce((a, b) => a + b) / freqData.length;
+    let hue = (avg * 2) % 360;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = avg > 3 ? `hsl(${hue}, 100%, 50%)` : "#333";
+    ctx.beginPath(); let sw = cvs.width / timeData.length;
+    for (let i = 0; i < timeData.length; i++) {
+        const y = (timeData[i] / 128.0) * cvs.height / 2;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sw, y);
+    }
+    ctx.stroke();
+}
+
+document.getElementById('b-file').onclick = () => document.getElementById('f-in').click();
+document.getElementById('f-in').onchange = (e) => {
+    const reader = new FileReader();
+    reader.onload = (re) => { virtualCache = re.target.result; };
+    reader.readAsDataURL(e.target.files[0]);
+};
+</script>
+</body>
+</html>
