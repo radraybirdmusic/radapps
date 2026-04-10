@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v2.08: PIEZO</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
+        #ui { position: absolute; inset: 0; background: #000; width: 100vw; height: 100vh; }
+        #header { position: absolute; top: 0; width: 100%; height: 130px; background: #111; border-bottom: 3px solid #333; z-index: 500; }
+        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 90px; }
+        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 8px; font-size: 11px; text-align: center; height: 45px; width: 70px; cursor: pointer; }
+        .mini-btn { width: 50px; height: 50px; border-radius: 50%; background: #222; border: 2px solid #fff; font-size: 22px; cursor: pointer; }
+        .pad-grid { position: absolute; bottom: 20px; width: 42%; height: auto; z-index: 200; touch-action: none; }
+        #pad-left { left: 8%; } #pad-right { right: 8%; }
+        #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+        /* High-Voltage visual indicator */
+        .strike-flash { filter: brightness(2); transition: 0.1s; }
+    </style>
+</head>
+<body>
+<div id="ui">
+    <div id="header">
+        <div class="nav-container">
+            <button id="b-rec" class="mini-btn">🐝</button>
+            <button id="p-lock" class="btn">LOCK</button>
+            <button id="b-save" class="btn" style="border-color:#44aaff; color:#44aaff;">SAVE</button>
+            <button id="b-file" class="mini-btn">📂</button>
+        </div>
+        <div id="diag" style="text-align:center; font-size:10px; color:var(--g);">PIEZO ENGINE ACTIVE v2.08</div>
+        <input type="file" id="f-in" hidden accept="*">
+    </div>
+
+    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none" id="left-pistons">
+            <circle class="piezo" cx="30" cy="35" r="20" data-note="1.0"/>
+            <circle class="piezo" cx="80" cy="35" r="20" data-note="1.1"/>
+            <circle class="piezo" cx="130" cy="35" r="20" data-note="1.2"/>
+            <circle class="piezo" cx="180" cy="35" r="6" data-note="2.0"/>
+            <circle class="piezo" cx="30" cy="90" r="20" data-note="0.8"/>
+            <circle class="piezo" cx="80" cy="90" r="20" data-note="0.9"/>
+            <circle class="piezo" cx="130" cy="90" r="20" data-note="1.0"/>
+            <circle class="piezo" cx="180" cy="90" r="6" data-note="1.5"/>
+        </g>
+    </svg>
+
+    <canvas id="osc"></canvas>
+</div>
+
+<script>
+let aCtx, anal, masterBus, virtualCache = null, activeSources = [];
+
+// Initialize on first touch to satisfy iPad security
+window.addEventListener('pointerdown', async () => {
+    if (!aCtx) {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        anal = aCtx.createAnalyser(); 
+        masterBus = aCtx.createMediaStreamDestination();
+        anal.connect(aCtx.destination);
+        draw();
+    }
+}, {once: true});
+
+// PIEZO TRIGGER LOGIC
+document.querySelectorAll('.piezo').forEach(piston => {
+    piston.addEventListener('pointerdown', (e) => {
+        // Calculate "Strike Voltage" based on proximity to circle center
+        const rect = e.target.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dist = Math.sqrt(Math.pow(e.clientX - centerX, 2) + Math.pow(e.clientY - centerY, 2));
+        
+        // Voltage is higher when you hit the center (Digital Piezo effect)
+        const voltage = Math.max(0.1, 1 - (dist / rect.width));
+        const baseNote = parseFloat(piston.getAttribute('data-note'));
+        
+        strikePiezo(baseNote, voltage);
+        piston.setAttribute('stroke', `hsl(${(voltage * 360)}, 100%, 50%)`);
+    });
+
+    piston.addEventListener('pointerup', () => {
+        piston.setAttribute('stroke', '#fff');
+    });
+});
+
+async function strikePiezo(pitch, voltage) {
+    if (!virtualCache || !aCtx) return;
+    const res = await fetch(virtualCache);
+    const ab = await res.arrayBuffer();
+    aCtx.decodeAudioData(ab, (buffer) => {
+        const s = aCtx.createBufferSource();
+        const g = aCtx.createGain(); // The Piezo Gain Stage
+        
+        s.buffer = buffer;
+        s.playbackRate.value = pitch + (voltage * 0.2); // Pitch "warps" with pressure
+        
+        g.gain.setValueAtTime(voltage, aCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime + 1.5); // Dissipation
+        
+        s.connect(g);
+        g.connect(anal);
+        g.connect(masterBus);
+        s.start(0);
+        activeSources.push(s);
+    });
+}
+
+// Drawing the Chakra Radiation (from v2.07)
+function draw() {
+    requestAnimationFrame(draw);
+    if (!anal) return;
+    const cvs = document.getElementById('osc');
+    const ctx = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    
+    const timeData = new Uint8Array(anal.frequencyBinCount);
+    const freqData = new Uint8Array(anal.frequencyBinCount);
+    anal.getByteTimeDomainData(timeData);
+    anal.getByteFrequencyData(freqData);
+    
+    let avg = freqData.reduce((a, b) => a + b) / freqData.length;
+    let hue = (avg * 1.5) % 360;
+    
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = avg > 2 ? `hsl(${hue}, 100%, 50%)` : "#222";
+    
+    ctx.beginPath();
+    let sw = cvs.width / timeData.length;
+    for (let i = 0; i < timeData.length; i++) {
+        const y = (timeData[i] / 128.0) * cvs.height / 2;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sw, y);
+    }
+    ctx.stroke();
+}
+
+// Simple File Load
+document.getElementById('b-file').onclick = () => document.getElementById('f-in').click();
+document.getElementById('f-in').onchange = (e) => {
+    const reader = new FileReader();
+    reader.onload = (re) => { virtualCache = re.target.result; };
+    reader.readAsDataURL(e.target.files[0]);
+};
+</script>
+</body>
+</html>
+
