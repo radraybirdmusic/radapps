@@ -3,85 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TRUMPET GARDEN v2.31</title>
+    <title>TRUMPET GARDEN v2.32</title>
     <style>
-        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; }
         body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
         .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
         #gate { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; justify-content: center; align-items: center; }
         #ui { position: absolute; inset: 0; z-index: 100; display: none; background: #000; }
-        #header { position: absolute; top: 0; width: 100%; height: 135px; background: #111 !important; border-bottom: 3px solid #333; z-index: 1500; box-sizing: border-box; }
-        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 95px; padding: 5px; }
-        .nav-group { display: flex; align-items: center; gap: 8px; }
-        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-align: center; height: 45px; }
-        .mini-btn { width: 52px; height: 52px; border-radius: 50%; background: #222; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-        .col-btn { display: flex; flex-direction: column; gap: 4px; }
-        .mini-label { font-size: 9px; width: 60px; height: 24px; }
-        #diag { width: 100%; text-align: center; font-size: 11px; color: var(--g); padding-top: 5px; font-weight: bold; }
-        .ham { position: absolute; top: 160px; padding: 10px 20px; font-size: 12px; border: 2px solid var(--y); color: var(--y); background: #000; border-radius: 6px; cursor: pointer; z-index: 1000; }
-        .sld { position: absolute; width: 50px; height: 200px; background: #111; border: 2px solid #555; border-radius: 25px; top: 260px; z-index: 300; }
-        #l-s { left: 4%; } #r-s { right: 4%; }
-        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 25px; pointer-events: none; }
         
-        /* v2.31 HARD DROP - Shoving them to the bottom glass */
-        .pad-grid { position: absolute; bottom: 5px; width: 44%; height: auto; pointer-events: auto; z-index: 400; }
+        /* HEADER: Compact and Forced High-Contrast */
+        #header { position: absolute; top: 0; width: 100%; height: 110px; background: #111 !important; border-bottom: 2px solid #333; z-index: 1500; }
+        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 80px; }
+        
+        /* Buttons at 60% Scale */
+        .btn { background: #222; border: 2px solid var(--p); color: #fff !important; opacity: 1 !important; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px; text-align: center; height: 35px; width: 65px; }
+        .mini-btn { width: 42px; height: 42px; border-radius: 50%; background: #222; border: 2px solid #fff; color: #fff !important; opacity: 1 !important; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .col-btn { display: flex; flex-direction: column; gap: 3px; }
+        .mini-label { font-size: 8px; width: 50px; height: 18px; border-color: #fff !important; color: #fff !important; }
+        
+        #diag { width: 100%; text-align: center; font-size: 10px; color: var(--g); font-weight: bold; }
+        
+        .ham { position: absolute; top: 125px; padding: 8px 15px; font-size: 10px; border: 2px solid var(--y); color: var(--y); background: #000; border-radius: 4px; z-index: 1000; }
+        
+        .sld { position: absolute; width: 40px; height: 150px; background: #111; border: 2px solid #555; border-radius: 20px; top: 200px; z-index: 300; }
+        #l-s { left: 4%; } #r-s { right: 4%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 20px; pointer-events: none; }
+        
+        /* THE PISTONS: Scaled down and Shrunk Vertically */
+        .pad-grid { position: absolute; bottom: 10px; width: 40%; height: auto; z-index: 400; }
         #pad-left { left: 8%; } #pad-right { right: 8%; }
         #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
     </style>
 </head>
 <body>
-<div id="gate"><button id="b-mic" class="btn" style="font-size: 24px; padding: 25px 50px; width:300px;">IGNITE v2.31</button></div>
+<div id="gate"><button id="b-mic" class="btn" style="font-size: 18px; width:200px; height:60px;">IGNITE v2.32</button></div>
 <div id="ui">
     <div id="header">
-        <div id="rec-progress" style="position:absolute; bottom:0; left:0; height:5px; background:var(--g); width:0%; transition: width 0.1s linear;"></div>
+        <div id="rec-progress" style="position:absolute; bottom:0; left:0; height:3px; background:var(--g); width:0%;"></div>
         <div class="nav-container">
-            <div class="nav-group">
+            <div style="display:flex; align-items:center; gap:6px;">
                 <button id="b-rec" class="mini-btn">🐝</button>
                 <div class="col-btn">
-                    <button id="p-rec-play" class="btn mini-label" style="border-color:var(--y); color:var(--y);">PLAY</button>
-                    <button id="s-rec-stop" class="btn mini-label" style="border-color:var(--y); color:var(--y); font-size:8px;">STOP ■</button>
+                    <button id="p-rec-play" class="btn mini-label" style="border-color:var(--y) !important; color:var(--y) !important;">PLAY</button>
+                    <button id="s-rec-stop" class="btn mini-label" style="border-color:var(--y) !important; color:var(--y) !important;">STOP</button>
                 </div>
             </div>
-            <div class="nav-group">
-                <button id="p-lock" class="btn" style="width:75px;" onclick="toggleLock()">LOCK</button>
-                <button id="b-save" class="btn" style="width:75px; border-color:#44aaff; color:#44aaff;">SAVE</button>
-                <button id="b-glitch" class="btn" style="width:75px; border-color:#ff4444; color:#ff4444;">GLITCH</button>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <button id="p-lock" class="btn" onclick="toggleLock()">LOCK</button>
+                <button id="b-save" class="btn" style="border-color:#44aaff !important; color:#44aaff !important;">SAVE</button>
+                <button id="b-glitch" class="btn" style="border-color:#ff4444 !important; color:#ff4444 !important;">GLITCH</button>
             </div>
-            <div class="nav-group">
+            <div style="display:flex; align-items:center; gap:6px;">
                 <div class="col-btn">
-                    <button id="p-file-play" class="btn mini-label" style="border-color:#fff; color:#fff;">PLAY</button>
-                    <button id="s-file-stop" class="btn mini-label" style="border-color:#fff; color:#fff; font-size:8px;">STOP ■</button>
+                    <button id="p-file-play" class="btn mini-label">PLAY</button>
+                    <button id="s-file-stop" class="btn mini-label">STOP</button>
                 </div>
                 <button id="b-file" class="mini-btn">📂</button>
             </div>
         </div>
-        <div id="diag">STATUS: v2.31 FIXED</div>
+        <div id="diag">STATUS: v2.32 PRECISION</div>
         <input type="file" id="f-in" hidden accept="audio/*">
     </div>
 
-    <button id="h-left" class="ham" style="left: 10%;">HAM L-</button>
-    <button id="h-right" class="ham" style="right: 10%;">HAM R+</button>
+    <button id="h-left" class="ham" style="left: 8%;">HAM L-</button>
+    <button id="h-right" class="ham" style="right: 8%;">HAM R+</button>
 
     <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" class="fill" style="height:50%"></div></div>
     <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" class="fill" style="height:50%"></div></div>
 
-    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 280">
-        <g stroke="#fff" stroke-width="3" fill="none">
-            <circle cx="35" cy="40" r="25" onpointerdown="pulse(1.0)"/><circle cx="105" cy="40" r="25" onpointerdown="pulse(1.1)"/><circle cx="175" cy="40" r="25" onpointerdown="pulse(1.2)"/>
-            <circle cx="35" cy="120" r="25" onpointerdown="pulse(0.8)"/><circle cx="105" cy="120" r="25" onpointerdown="pulse(0.9)"/><circle cx="175" cy="120" r="25" onpointerdown="pulse(1.0)"/>
-            <circle cx="35" cy="200" r="25" onpointerdown="pulse(0.6)"/><circle cx="105" cy="200" r="25" onpointerdown="pulse(0.7)"/><circle cx="175" cy="200" r="25" onpointerdown="pulse(0.8)"/>
+    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 230">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="40" cy="40" r="22" onpointerdown="pulse(1.0)"/><circle cx="110" cy="40" r="22" onpointerdown="pulse(1.1)"/><circle cx="180" cy="40" r="22" onpointerdown="pulse(1.2)"/>
+            <circle cx="40" cy="110" r="22" onpointerdown="pulse(0.8)"/><circle cx="110" cy="110" r="22" onpointerdown="pulse(0.9)"/><circle cx="180" cy="110" r="22" onpointerdown="pulse(1.0)"/>
+            <circle cx="40" cy="180" r="22" onpointerdown="pulse(0.6)"/><circle cx="110" cy="180" r="22" onpointerdown="pulse(0.7)"/><circle cx="180" cy="180" r="22" onpointerdown="pulse(0.8)"/>
         </g>
     </svg>
 
-    <svg id="pad-right" class="pad-grid" viewBox="0 0 220 280">
-        <g stroke="#fff" stroke-width="3" fill="none">
-            <circle cx="45" cy="40" r="25" onpointerdown="pulse(1.2)"/><circle cx="115" cy="40" r="25" onpointerdown="pulse(1.1)"/><circle cx="185" cy="40" r="25" onpointerdown="pulse(1.0)"/>
-            <circle cx="45" cy="120" r="25" onpointerdown="pulse(1.0)"/><circle cx="115" cy="120" r="25" onpointerdown="pulse(0.9)"/><circle cx="185" cy="120" r="25" onpointerdown="pulse(0.8)"/>
-            <circle cx="45" cy="200" r="25" onpointerdown="pulse(0.8)"/><circle cx="115" cy="200" r="25" onpointerdown="pulse(0.7)"/><circle cx="185" cy="200" r="25" onpointerdown="pulse(0.6)"/>
+    <svg id="pad-right" class="pad-grid" viewBox="0 0 220 230">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="40" cy="40" r="22" onpointerdown="pulse(1.2)"/><circle cx="110" cy="40" r="22" onpointerdown="pulse(1.1)"/><circle cx="180" cy="40" r="22" onpointerdown="pulse(1.0)"/>
+            <circle cx="40" cy="110" r="22" onpointerdown="pulse(1.0)"/><circle cx="110" cy="110" r="22" onpointerdown="pulse(0.9)"/><circle cx="180" cy="110" r="22" onpointerdown="pulse(0.8)"/>
+            <circle cx="40" cy="180" r="22" onpointerdown="pulse(0.8)"/><circle cx="110" cy="180" r="22" onpointerdown="pulse(0.7)"/><circle cx="180" cy="180" r="22" onpointerdown="pulse(0.6)"/>
         </g>
     </svg>
 </div>
 <canvas id="osc"></canvas>
+
 <script>
 let aCtx, anal, src, rec, chks = [], virtualCache = null, isL = false, isF = false, ints = {l:0.5, r:0.5}, activeSources = [], curPitch = 1.0;
 const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d'), diag = document.getElementById('diag'), prog = document.getElementById('rec-progress');
@@ -107,7 +114,7 @@ document.getElementById('b-rec').onclick = () => {
     rec.onstop = () => {
         const b = new Blob(chks, { type: 'audio/webm' });
         const r = new FileReader();
-        r.onloadend = () => { virtualCache = r.result; diag.innerText = "v2.31 RECORDED"; };
+        r.onloadend = () => { virtualCache = r.result; diag.innerText = "v2.32 CACHED"; };
         r.readAsDataURL(b);
     };
     rec.start();
@@ -119,28 +126,31 @@ document.getElementById('b-rec').onclick = () => {
     }, 50);
 };
 
-// FIX: SAVE BUTTON RE-WIRED
 document.getElementById('b-save').onclick = () => {
-    if(!virtualCache) { diag.innerText = "NOTHING TO SAVE"; return; }
+    if(!virtualCache) return;
     const a = document.createElement('a'); a.href = virtualCache;
-    a.download = `TRUMPET_${Date.now()}.webm`; a.click();
-    diag.innerText = "SAVED TO DEVICE";
+    a.download = `GARDEN_${Date.now()}.webm`; a.click();
 };
 
-// FIX: RESPONSIVE OCTAVE MULTIPLIERS (Infinite stack)
-document.getElementById('h-left').onpointerdown = () => { curPitch *= 0.5; diag.innerText = "OCTAVE DOWN: " + curPitch.toFixed(2); };
-document.getElementById('h-right').onpointerdown = () => { curPitch *= 2.0; diag.innerText = "OCTAVE UP: " + curPitch.toFixed(2); };
+// CLEAN OCTAVE STEPS (0.5 to 8.0)
+document.getElementById('h-left').onpointerdown = () => { 
+    if(curPitch > 0.5) curPitch /= 2; 
+    diag.innerText = "OCTAVE: " + curPitch; 
+};
+document.getElementById('h-right').onpointerdown = () => { 
+    if(curPitch < 8.0) curPitch *= 2; 
+    diag.innerText = "OCTAVE: " + curPitch; 
+};
 
 async function pulse(p) {
     if (!virtualCache || !aCtx) return;
+    if (aCtx.state === 'suspended') await aCtx.resume();
     const res = await fetch(virtualCache);
     const ab = await res.arrayBuffer();
     aCtx.decodeAudioData(ab, (buffer) => {
-        const s = aCtx.createBufferSource(); 
-        s.buffer = buffer; 
+        const s = aCtx.createBufferSource(); s.buffer = buffer; 
         s.playbackRate.value = p * curPitch;
-        s.connect(anal); s.connect(aCtx.destination); 
-        s.start(0);
+        s.connect(anal); s.connect(aCtx.destination); s.start(0);
         activeSources.push(s); 
     });
 }
@@ -158,8 +168,7 @@ function slide(e, s) {
 
 document.getElementById('b-file').onclick = () => document.getElementById('f-in').click();
 document.getElementById('f-in').onchange = (e) => {
-    const r = new FileReader(); 
-    r.onload = (re) => { virtualCache = re.target.result; diag.innerText = "📂 LOADED"; };
+    const r = new FileReader(); r.onload = (re) => { virtualCache = re.target.result; diag.innerText = "📂 LOADED"; };
     r.readAsDataURL(e.target.files[0]);
 };
 
@@ -168,16 +177,14 @@ document.getElementById('p-rec-play').onclick = () => pulse(1.0);
 document.getElementById('s-file-stop').onclick = () => stopAll();
 document.getElementById('s-rec-stop').onclick = () => stopAll();
 
-function stopAll() { activeSources.forEach(s => { try { s.stop(); } catch(err) {} }); activeSources = []; diag.innerText = "STOPPED"; }
+function stopAll() { activeSources.forEach(s => { try { s.stop(); } catch(err) {} }); activeSources = []; }
 function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCKED" : "LOCK"; }
 
 function draw() {
     requestAnimationFrame(draw); if (!anal) return;
     cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-    const d = new Uint8Array(anal.frequencyBinCount); 
-    anal.getByteTimeDomainData(d);
-    ctx.clearRect(0, 0, cvs.width, cvs.height); 
-    ctx.lineWidth = 4; ctx.strokeStyle = isF ? "#000" : "#0f0";
+    const d = new Uint8Array(anal.frequencyBinCount); anal.getByteTimeDomainData(d);
+    ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.lineWidth = 4; ctx.strokeStyle = isF ? "#000" : "#0f0";
     ctx.beginPath(); let sw = cvs.width / d.length;
     for (let i = 0; i < d.length; i++) {
         const y = (d[i] / 128.0) * cvs.height / 2;
@@ -188,5 +195,4 @@ function draw() {
 </script>
 </body>
 </html>
-
 
