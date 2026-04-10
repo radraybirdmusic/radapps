@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v2.11</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
+        #ui { position: absolute; inset: 0; z-index: 100; background: #000; width: 100vw; height: 100vh; }
+        #header { position: absolute; top: 0; width: 100%; height: 130px; background: #111 !important; border-bottom: 3px solid #333; z-index: 500; box-sizing: border-box; }
+        #rec-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--g); width: 0%; transition: width 0.1s linear; }
+        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 90px; padding: 5px; }
+        .nav-group { display: flex; align-items: center; gap: 8px; }
+        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-align: center; height: 45px; width: 70px; }
+        .mini-btn { width: 50px; height: 50px; border-radius: 50%; background: #222; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
+        .col-btn { display: flex; flex-direction: column; gap: 4px; }
+        .mini-label { font-size: 9px; width: 55px; height: 22px; }
+        #diag { width: 100%; text-align: center; font-size: 10px; color: var(--g); padding-top: 5px; font-weight: bold; }
+        .sld { position: absolute; width: 45px; height: 180px; background: #111; border: 2px solid #555; border-radius: 25px; top: 240px; z-index: 300; }
+        #l-s { left: 3%; } #r-s { right: 3%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 25px; pointer-events: none; }
+        .pad-grid { position: absolute; bottom: 20px; width: 42%; height: auto; pointer-events: auto; z-index: 200; }
+        #pad-left { left: 8%; } #pad-right { right: 8%; }
+        #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+    </style>
+</head>
+<body>
+<div id="ui">
+    <div id="header">
+        <div id="rec-progress"></div>
+        <div class="nav-container">
+            <div class="nav-group"><button id="b-rec" class="mini-btn">🐝</button><div class="col-btn"><button id="p-rec-play" class="btn mini-label" style="border-color:var(--y); color:var(--y);">PLAY</button><button id="s-rec-stop" class="btn mini-label" style="border-color:var(--y); color:var(--y); font-size:8px;">STOP ■</button></div></div>
+            <div class="nav-group"><button id="p-lock" class="btn" onclick="toggleLock()">LOCK</button><button id="b-save" class="btn" style="border-color:#44aaff; color:#44aaff;">SAVE</button></div>
+            <div class="nav-group"><div class="col-btn"><button id="p-file-play" class="btn mini-label" style="border-color:var(--gry); color:var(--gry);">PLAY</button><button id="s-file-stop" class="btn mini-label" style="border-color:var(--gry); color:var(--gry); font-size:8px;">STOP ■</button></div><button id="b-file" class="mini-btn">📂</button></div>
+        </div>
+        <div id="diag">STATUS: v2.11 RESTORED</div>
+        <input type="file" id="f-in" hidden accept="*">
+    </div>
+
+    <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" class="fill" style="height:50%"></div></div>
+    <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" class="fill" style="height:50%"></div></div>
+
+    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="30" cy="35" r="20" onpointerdown="piezo(event, 1.0)"/><circle cx="80" cy="35" r="20" onpointerdown="piezo(event, 1.1)"/><circle cx="130" cy="35" r="20" onpointerdown="piezo(event, 1.2)"/><circle cx="180" cy="35" r="6" onpointerdown="piezo(event, 1.5)"/>
+            <circle cx="30" cy="90" r="20" onpointerdown="piezo(event, 0.8)"/><circle cx="80" cy="90" r="20" onpointerdown="piezo(event, 0.9)"/><circle cx="130" cy="90" r="20" onpointerdown="piezo(event, 1.0)"/><circle cx="180" cy="90" r="6" onpointerdown="piezo(event, 1.2)"/>
+            <circle cx="30" cy="145" r="20" onpointerdown="piezo(event, 0.6)"/><circle cx="80" cy="145" r="20" onpointerdown="piezo(event, 0.7)"/><circle cx="130" cy="145" r="20" onpointerdown="piezo(event, 0.8)"/><circle cx="180" cy="145" r="6" onpointerdown="piezo(event, 1.0)"/>
+        </g>
+    </svg>
+
+    <svg id="pad-right" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="40" cy="35" r="6" onpointerdown="piezo(event, 1.5)"/><circle cx="90" cy="35" r="20" onpointerdown="piezo(event, 1.2)"/><circle cx="140" cy="35" r="20" onpointerdown="piezo(event, 1.1)"/><circle cx="190" cy="35" r="20" onpointerdown="piezo(event, 1.0)"/>
+            <circle cx="40" cy="90" r="6" onpointerdown="piezo(event, 1.2)"/><circle cx="90" cy="90" r="20" onpointerdown="piezo(event, 1.0)"/><circle cx="140" cy="90" r="20" onpointerdown="piezo(event, 0.9)"/><circle cx="190" cy="90" r="20" onpointerdown="piezo(event, 0.8)"/>
+            <circle cx="40" cy="145" r="6" onpointerdown="piezo(event, 1.0)"/><circle cx="90" cy="145" r="20" onpointerdown="piezo(event, 0.8)"/><circle cx="140" cy="145" r="20" onpointerdown="piezo(event, 0.7)"/><circle cx="190" cy="145" r="20" onpointerdown="piezo(event, 0.6)"/>
+        </g>
+    </svg>
+</div>
+<canvas id="osc"></canvas>
+<script>
+let aCtx, anal, masterBus, rec, chks = [], virtualCache = null, isL = false, activeSources = [];
+
+// Clean init
+window.addEventListener('pointerdown', async () => {
+    if (!aCtx) {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        anal = aCtx.createAnalyser(); anal.fftSize = 2048;
+        masterBus = aCtx.createMediaStreamDestination();
+        anal.connect(aCtx.destination);
+        draw();
+    }
+}, {once: true});
+
+async function piezo(e, pitch) {
+    if (!virtualCache || !aCtx) return;
+    const rect = e.target.getBoundingClientRect();
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    const dist = Math.sqrt(Math.pow(e.clientX - cx, 2) + Math.pow(e.clientY - cy, 2));
+    const v = Math.max(0.1, 1 - (dist / rect.width)); // Simple voltage logic
+    
+    if (aCtx.state === 'suspended') await aCtx.resume();
+    const res = await fetch(virtualCache);
+    const ab = await res.arrayBuffer();
+    aCtx.decodeAudioData(ab, (buffer) => {
+        const s = aCtx.createBufferSource(), g = aCtx.createGain();
+        s.buffer = buffer; s.playbackRate.value = pitch + (v * 0.1);
+        g.gain.setValueAtTime(v, aCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime + 1.2);
+        s.connect(g); g.connect(anal); g.connect(masterBus);
+        s.start(0); activeSources.push(s); 
+    });
+}
+
+bRec.onclick = () => {
+    if (rec && rec.state === "recording") return;
+    chks = []; rec = new MediaRecorder(masterBus.stream);
+    rec.ondataavailable = e => chks.push(e.data);
+    rec.onstop = async () => {
+        const blob = new Blob(chks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => { virtualCache = reader.result; diag.innerText = `CACHED`; };
+        reader.readAsDataURL(blob);
+    };
+    rec.start();
+    let startTime = Date.now();
+    let interval = setInterval(() => {
+        let elapsed = Date.now() - startTime;
+        prog.style.width = Math.min((elapsed / 3500) * 100, 100) + '%';
+        if (elapsed >= 3500) { clearInterval(interval); if(rec.state==="recording") rec.stop(); }
+    }, 50);
+};
+
+bSave.onclick = () => { if(virtualCache) { const l = document.createElement('a'); l.href = virtualCache; l.download = `V2.11.webm`; l.click(); } };
+bFile.onclick = () => fIn.click();
+fIn.onchange = (e) => { const r = new FileReader(); r.onload = (re) => { virtualCache = re.target.result; diag.innerText = "LOADED"; }; r.readAsDataURL(e.target.files[0]); };
+
+function draw() {
+    requestAnimationFrame(draw); if (!anal) return;
+    const cvs = document.getElementById('osc'); const ctx = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    const t = new Uint8Array(anal.frequencyBinCount); const f = new Uint8Array(anal.frequencyBinCount);
+    anal.getByteTimeDomainData(t); anal.getByteFrequencyData(f);
+    let avg = f.reduce((a, b) => a + b) / f.length;
+    ctx.clearRect(0, 0, cvs.width, cvs.height); ctx.lineWidth = 4;
+    ctx.strokeStyle = avg > 5 ? `hsl(${(avg * 1.5) % 360}, 100%, 50%)` : "#333";
+    ctx.beginPath(); let sw = cvs.width / t.length;
+    for (let i = 0; i < t.length; i++) {
+        const y = (t[i] / 128.0) * cvs.height / 2;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sw, y);
+    }
+    ctx.stroke();
+}
+function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCKED" : "LOCK"; }
+function stopAll() { activeSources.forEach(s => { try{s.stop()}catch(e){} }); activeSources = []; }
+document.getElementById('p-rec-play').onclick = () => piezo({target: document.querySelector('circle'), clientX: 0, clientY: 0}, 1.0);
+document.getElementById('p-file-play').onclick = () => piezo({target: document.querySelector('circle'), clientX: 0, clientY: 0}, 1.0);
+document.getElementById('s-rec-stop').onclick = () => stopAll();
+document.getElementById('s-file-stop').onclick = () => stopAll();
+</script>
+</body>
+</html>
+
