@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v2.14</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
+        #ui { position: absolute; inset: 0; background: #000; }
+        #header { position: absolute; top: 0; width: 100%; height: 140px; background: #111; border-bottom: 2px solid #333; z-index: 1000; }
+        .nav-row { display: flex; justify-content: space-around; align-items: center; height: 100px; padding: 10px; }
+        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .q-btn { width: 65px; height: 45px; }
+        .mini-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #fff; font-size: 20px; }
+        .label-btn { width: 55px; height: 22px; font-size: 9px; margin: 2px 0; }
+        #diag { text-align: center; font-size: 10px; color: var(--g); font-weight: bold; margin-top: -5px; }
+        #rec-progress { position: absolute; bottom: 0; height: 4px; background: var(--g); width: 0%; }
+        .pad-grid { position: absolute; bottom: 20px; width: 44%; height: auto; z-index: 500; }
+        #pad-left { left: 5%; } #pad-right { right: 5%; }
+        #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+    </style>
+</head>
+<body>
+<div id="ui">
+    <div id="header">
+        <div class="nav-row">
+            <div style="display:flex; gap:8px; align-items:center;">
+                <div id="b-rec" class="btn mini-btn" onclick="wake()">🐝</div>
+                <div>
+                    <button id="p-rec-play" class="btn label-btn" style="border-color:var(--y); color:var(--y);" onclick="playCache()">PLAY</button>
+                    <button id="s-rec-stop" class="btn label-btn" style="border-color:var(--y); color:var(--y);" onclick="stopAll()">STOP</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="p-lock" class="btn q-btn" onclick="toggleLock()">LOCK</button>
+                <button id="b-save" class="btn q-btn" style="border-color:#44aaff; color:#44aaff;" onclick="saveMaster()">SAVE</button>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <div>
+                    <button id="p-file-play" class="btn label-btn" style="border-color:var(--gry); color:var(--gry);" onclick="playCache()">PLAY</button>
+                    <button id="s-file-stop" class="btn label-btn" style="border-color:var(--gry); color:var(--gry);" onclick="stopAll()">STOP</button>
+                </div>
+                <div id="b-file" class="btn mini-btn" onclick="openFile()">📂</div>
+            </div>
+        </div>
+        <div id="diag">STATUS: v2.14 CONNECTED</div>
+        <div id="rec-progress"></div>
+        <input type="file" id="f-in" hidden accept="*">
+    </div>
+
+    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="30" cy="35" r="20" onpointerdown="pulse(event, 1.0)"/><circle cx="80" cy="35" r="20" onpointerdown="pulse(event, 1.1)"/><circle cx="130" cy="35" r="20" onpointerdown="pulse(event, 1.2)"/><circle cx="180" cy="35" r="6" onpointerdown="pulse(event, 1.5)"/>
+            <circle cx="30" cy="90" r="20" onpointerdown="pulse(event, 0.8)"/><circle cx="80" cy="90" r="20" onpointerdown="pulse(event, 0.9)"/><circle cx="130" cy="90" r="20" onpointerdown="pulse(event, 1.0)"/><circle cx="180" cy="90" r="6" onpointerdown="pulse(event, 1.2)"/>
+            <circle cx="30" cy="145" r="20" onpointerdown="pulse(event, 0.6)"/><circle cx="80" cy="145" r="20" onpointerdown="pulse(event, 0.7)"/><circle cx="130" cy="145" r="20" onpointerdown="pulse(event, 0.8)"/><circle cx="180" cy="145" r="6" onpointerdown="pulse(event, 1.0)"/>
+        </g>
+    </svg>
+
+    <svg id="pad-right" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="40" cy="35" r="6" onpointerdown="pulse(event, 1.5)"/><circle cx="90" cy="35" r="20" onpointerdown="pulse(event, 1.2)"/><circle cx="140" cy="35" r="20" onpointerdown="pulse(event, 1.1)"/><circle cx="190" cy="35" r="20" onpointerdown="pulse(event, 1.0)"/>
+            <circle cx="40" cy="90" r="6" onpointerdown="pulse(event, 1.2)"/><circle cx="90" cy="90" r="20" onpointerdown="pulse(event, 1.0)"/><circle cx="140" cy="90" r="20" onpointerdown="pulse(event, 0.9)"/><circle cx="190" cy="90" r="20" onpointerdown="pulse(event, 0.8)"/>
+            <circle cx="40" cy="145" r="6" onpointerdown="pulse(event, 1.0)"/><circle cx="90" cy="145" r="20" onpointerdown="pulse(event, 0.8)"/><circle cx="140" cy="145" r="20" onpointerdown="pulse(event, 0.7)"/><circle cx="190" cy="145" r="20" onpointerdown="pulse(event, 0.6)"/>
+        </g>
+    </svg>
+</div>
+<canvas id="osc"></canvas>
+
+<script>
+let aCtx, anal, masterBus, rec, chks = [], virtualCache = null, activeSources = [], isL = false;
+
+// Audio context initializer
+async function wake() {
+    if (!aCtx) {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        anal = aCtx.createAnalyser(); 
+        anal.fftSize = 1024;
+        masterBus = aCtx.createMediaStreamDestination();
+        anal.connect(aCtx.destination);
+        draw();
+    }
+    if (aCtx.state === 'suspended') await aCtx.resume();
+}
+
+async function pulse(e, pitch) {
+    await wake();
+    if (!virtualCache) return;
+    const rect = e.target.getBoundingClientRect();
+    const v = Math.max(0.1, 1 - (Math.sqrt(Math.pow(e.clientX - (rect.left+rect.width/2), 2) + Math.pow(e.clientY - (rect.top+rect.height/2), 2)) / rect.width));
+    
+    const res = await fetch(virtualCache);
+    const ab = await res.arrayBuffer();
+    aCtx.decodeAudioData(ab, (buffer) => {
+        const s = aCtx.createBufferSource(), g = aCtx.createGain();
+        s.buffer = buffer; 
+        s.playbackRate.value = pitch + (v * 0.1);
+        g.gain.setValueAtTime(v, aCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime + 1.2);
+        s.connect(g); g.connect(anal); g.connect(masterBus);
+        s.start(0); activeSources.push(s); 
+    });
+}
+
+function draw() {
+    requestAnimationFrame(draw); if (!anal) return;
+    const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    const t = new Uint8Array(anal.frequencyBinCount), f = new Uint8Array(anal.frequencyBinCount);
+    anal.getByteTimeDomainData(t); anal.getByteFrequencyData(f);
+    let avg = f.reduce((a, b) => a + b) / f.length;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = avg > 2 ? `hsl(${(avg * 2) % 360}, 100%, 50%)` : "#0f0";
+    ctx.beginPath(); let sw = cvs.width / t.length;
+    for (let i = 0; i < t.length; i++) {
+        const y = (t[i] / 128.0) * cvs.height / 2;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sw, y);
+    }
+    ctx.stroke();
+}
+
+document.getElementById('b-rec').onclick = async () => {
+    await wake();
+    if (rec && rec.state === "recording") return;
+    chks = []; rec = new MediaRecorder(masterBus.stream);
+    rec.ondataavailable = e => chks.push(e.data);
+    rec.onstop = async () => {
+        const blob = new Blob(chks, { type: 'audio/webm' });
+        const r = new FileReader();
+        r.onloadend = () => { virtualCache = r.result; document.getElementById('diag').innerText = "v2.14 CACHED"; };
+        r.readAsDataURL(blob);
+    };
+    rec.start();
+    let start = Date.now();
+    let int = setInterval(() => {
+        let elapsed = Date.now() - start;
+        document.getElementById('rec-progress').style.width = Math.min((elapsed / 3500) * 100, 100) + '%';
+        if (elapsed >= 3500) { clearInterval(int); if(rec.state==="recording") rec.stop(); }
+    }, 50);
+};
+
+function openFile() { document.getElementById('f-in').click(); }
+document.getElementById('f-in').onchange = (e) => {
+    const r = new FileReader();
+    r.onload = (re) => { virtualCache = re.target.result; document.getElementById('diag').innerText = "📂 LOADED"; };
+    r.readAsDataURL(e.target.files[0]);
+};
+
+function playCache() { pulse({target: document.querySelector('circle'), clientX: 0, clientY: 0}, 1.0); }
+function stopAll() { activeSources.forEach(s => { try{s.stop()}catch(e){} }); activeSources = []; }
+function saveMaster() { if(virtualCache) { const l = document.createElement('a'); l.href = virtualCache; l.download = "master.webm"; l.click(); } }
+function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCKED" : "LOCK"; }
+</script>
+</body>
+</html>
