@@ -3,44 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TRUMPET GARDEN v2.30</title>
+    <title>TRUMPET GARDEN v2.31</title>
     <style>
         :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
         body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
         .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
         #gate { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; justify-content: center; align-items: center; }
         #ui { position: absolute; inset: 0; z-index: 100; display: none; background: #000; }
-        
-        /* HEADER: Pushed down slightly to clear the iPad status bar, but keeping the black theme */
         #header { position: absolute; top: 0; width: 100%; height: 135px; background: #111 !important; border-bottom: 3px solid #333; z-index: 1500; box-sizing: border-box; }
-        
         .nav-container { display: flex; align-items: center; justify-content: space-around; height: 95px; padding: 5px; }
         .nav-group { display: flex; align-items: center; gap: 8px; }
-        
         .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-align: center; height: 45px; }
         .mini-btn { width: 52px; height: 52px; border-radius: 50%; background: #222; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
         .col-btn { display: flex; flex-direction: column; gap: 4px; }
         .mini-label { font-size: 9px; width: 60px; height: 24px; }
-        
         #diag { width: 100%; text-align: center; font-size: 11px; color: var(--g); padding-top: 5px; font-weight: bold; }
-        
-        /* THE HAMS: Spread out and cleared from the buttons */
         .ham { position: absolute; top: 160px; padding: 10px 20px; font-size: 12px; border: 2px solid var(--y); color: var(--y); background: #000; border-radius: 6px; cursor: pointer; z-index: 1000; }
-        
-        /* THE SLIDERS: Sized for tactile use */
         .sld { position: absolute; width: 50px; height: 200px; background: #111; border: 2px solid #555; border-radius: 25px; top: 260px; z-index: 300; }
         #l-s { left: 4%; } #r-s { right: 4%; }
         .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 25px; pointer-events: none; }
         
-        /* v2.30 PISTON DROP: Shoved to the very bottom for pedal-style engagement */
-        .pad-grid { position: absolute; bottom: 10px; width: 44%; height: auto; pointer-events: auto; z-index: 400; }
+        /* v2.31 HARD DROP - Shoving them to the bottom glass */
+        .pad-grid { position: absolute; bottom: 5px; width: 44%; height: auto; pointer-events: auto; z-index: 400; }
         #pad-left { left: 8%; } #pad-right { right: 8%; }
-        
         #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
     </style>
 </head>
 <body>
-<div id="gate"><button id="b-mic" class="btn" style="font-size: 24px; padding: 25px 50px; width:300px;">IGNITE v2.30</button></div>
+<div id="gate"><button id="b-mic" class="btn" style="font-size: 24px; padding: 25px 50px; width:300px;">IGNITE v2.31</button></div>
 <div id="ui">
     <div id="header">
         <div id="rec-progress" style="position:absolute; bottom:0; left:0; height:5px; background:var(--g); width:0%; transition: width 0.1s linear;"></div>
@@ -65,12 +55,12 @@
                 <button id="b-file" class="mini-btn">📂</button>
             </div>
         </div>
-        <div id="diag">STATUS: v2.30 LIVE</div>
+        <div id="diag">STATUS: v2.31 FIXED</div>
         <input type="file" id="f-in" hidden accept="audio/*">
     </div>
 
-    <button class="ham" style="left: 10%;" onpointerdown="hamMomentum(0.5)">HAM L-</button>
-    <button class="ham" style="right: 10%;" onpointerdown="hamMomentum(2.0)">HAM R+</button>
+    <button id="h-left" class="ham" style="left: 10%;">HAM L-</button>
+    <button id="h-right" class="ham" style="right: 10%;">HAM R+</button>
 
     <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" class="fill" style="height:50%"></div></div>
     <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" class="fill" style="height:50%"></div></div>
@@ -79,6 +69,7 @@
         <g stroke="#fff" stroke-width="3" fill="none">
             <circle cx="35" cy="40" r="25" onpointerdown="pulse(1.0)"/><circle cx="105" cy="40" r="25" onpointerdown="pulse(1.1)"/><circle cx="175" cy="40" r="25" onpointerdown="pulse(1.2)"/>
             <circle cx="35" cy="120" r="25" onpointerdown="pulse(0.8)"/><circle cx="105" cy="120" r="25" onpointerdown="pulse(0.9)"/><circle cx="175" cy="120" r="25" onpointerdown="pulse(1.0)"/>
+            <circle cx="35" cy="200" r="25" onpointerdown="pulse(0.6)"/><circle cx="105" cy="200" r="25" onpointerdown="pulse(0.7)"/><circle cx="175" cy="200" r="25" onpointerdown="pulse(0.8)"/>
         </g>
     </svg>
 
@@ -86,6 +77,7 @@
         <g stroke="#fff" stroke-width="3" fill="none">
             <circle cx="45" cy="40" r="25" onpointerdown="pulse(1.2)"/><circle cx="115" cy="40" r="25" onpointerdown="pulse(1.1)"/><circle cx="185" cy="40" r="25" onpointerdown="pulse(1.0)"/>
             <circle cx="45" cy="120" r="25" onpointerdown="pulse(1.0)"/><circle cx="115" cy="120" r="25" onpointerdown="pulse(0.9)"/><circle cx="185" cy="120" r="25" onpointerdown="pulse(0.8)"/>
+            <circle cx="45" cy="200" r="25" onpointerdown="pulse(0.8)"/><circle cx="115" cy="200" r="25" onpointerdown="pulse(0.7)"/><circle cx="185" cy="200" r="25" onpointerdown="pulse(0.6)"/>
         </g>
     </svg>
 </div>
@@ -94,7 +86,6 @@
 let aCtx, anal, src, rec, chks = [], virtualCache = null, isL = false, isF = false, ints = {l:0.5, r:0.5}, activeSources = [], curPitch = 1.0;
 const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d'), diag = document.getElementById('diag'), prog = document.getElementById('rec-progress');
 
-// 1. SYSTEM IGNITE
 document.getElementById('b-mic').onclick = async () => {
     document.getElementById('gate').style.display = 'none'; 
     document.getElementById('ui').style.display = 'block';
@@ -108,7 +99,6 @@ document.getElementById('b-mic').onclick = async () => {
     } catch (err) { diag.innerText = "MIC ERROR"; }
 };
 
-// 2. BEE RECORDER (3.5s)
 document.getElementById('b-rec').onclick = () => {
     if (rec && rec.state === "recording") return;
     chks = []; 
@@ -117,7 +107,7 @@ document.getElementById('b-rec').onclick = () => {
     rec.onstop = () => {
         const b = new Blob(chks, { type: 'audio/webm' });
         const r = new FileReader();
-        r.onloadend = () => { virtualCache = r.result; diag.innerText = "v2.30 CACHED"; };
+        r.onloadend = () => { virtualCache = r.result; diag.innerText = "v2.31 RECORDED"; };
         r.readAsDataURL(b);
     };
     rec.start();
@@ -129,10 +119,20 @@ document.getElementById('b-rec').onclick = () => {
     }, 50);
 };
 
-// 3. PISTON AUDIO
+// FIX: SAVE BUTTON RE-WIRED
+document.getElementById('b-save').onclick = () => {
+    if(!virtualCache) { diag.innerText = "NOTHING TO SAVE"; return; }
+    const a = document.createElement('a'); a.href = virtualCache;
+    a.download = `TRUMPET_${Date.now()}.webm`; a.click();
+    diag.innerText = "SAVED TO DEVICE";
+};
+
+// FIX: RESPONSIVE OCTAVE MULTIPLIERS (Infinite stack)
+document.getElementById('h-left').onpointerdown = () => { curPitch *= 0.5; diag.innerText = "OCTAVE DOWN: " + curPitch.toFixed(2); };
+document.getElementById('h-right').onpointerdown = () => { curPitch *= 2.0; diag.innerText = "OCTAVE UP: " + curPitch.toFixed(2); };
+
 async function pulse(p) {
     if (!virtualCache || !aCtx) return;
-    if (aCtx.state === 'suspended') await aCtx.resume();
     const res = await fetch(virtualCache);
     const ab = await res.arrayBuffer();
     aCtx.decodeAudioData(ab, (buffer) => {
@@ -145,7 +145,6 @@ async function pulse(p) {
     });
 }
 
-// 4. SLIDERS & FAE GLITCH
 function slide(e, s) {
     if (isL) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -153,21 +152,14 @@ function slide(e, s) {
     let v = 1 - (y - r.top) / r.height;
     ints[s] = Math.max(0, Math.min(1.5, v * 1.5));
     document.getElementById(s + '-f').style.height = (ints[s] / 1.5) * 100 + "%";
-    
-    if (ints.l > 1.2 || ints.r > 1.2) { 
-        document.body.classList.add('fae'); isF = true; 
-    } else { 
-        document.body.classList.remove('fae'); isF = false; 
-    }
+    if (ints.l > 1.2 || ints.r > 1.2) { document.body.classList.add('fae'); isF = true; } 
+    else { document.body.classList.remove('fae'); isF = false; }
 }
-
-// 5. NAVIGATION & HAM
-function hamMomentum(m) { curPitch = m; diag.innerText = "OCTAVE: " + m; }
 
 document.getElementById('b-file').onclick = () => document.getElementById('f-in').click();
 document.getElementById('f-in').onchange = (e) => {
     const r = new FileReader(); 
-    r.onload = (re) => { virtualCache = re.target.result; diag.innerText = "📂 FILE LOADED"; };
+    r.onload = (re) => { virtualCache = re.target.result; diag.innerText = "📂 LOADED"; };
     r.readAsDataURL(e.target.files[0]);
 };
 
@@ -176,28 +168,17 @@ document.getElementById('p-rec-play').onclick = () => pulse(1.0);
 document.getElementById('s-file-stop').onclick = () => stopAll();
 document.getElementById('s-rec-stop').onclick = () => stopAll();
 
-function stopAll() { 
-    activeSources.forEach(s => { try { s.stop(); } catch(err) {} }); 
-    activeSources = []; 
-    diag.innerText = "STOPPED"; 
-}
+function stopAll() { activeSources.forEach(s => { try { s.stop(); } catch(err) {} }); activeSources = []; diag.innerText = "STOPPED"; }
+function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCKED" : "LOCK"; }
 
-function toggleLock() { 
-    isL = !isL; 
-    document.getElementById('p-lock').innerText = isL ? "LOCKED" : "LOCK"; 
-}
-
-// 6. OSCILLOSCOPE
 function draw() {
     requestAnimationFrame(draw); if (!anal) return;
     cvs.width = window.innerWidth; cvs.height = window.innerHeight;
     const d = new Uint8Array(anal.frequencyBinCount); 
     anal.getByteTimeDomainData(d);
     ctx.clearRect(0, 0, cvs.width, cvs.height); 
-    ctx.lineWidth = 4; 
-    ctx.strokeStyle = isF ? "#000" : "#0f0";
-    ctx.beginPath(); 
-    let sw = cvs.width / d.length;
+    ctx.lineWidth = 4; ctx.strokeStyle = isF ? "#000" : "#0f0";
+    ctx.beginPath(); let sw = cvs.width / d.length;
     for (let i = 0; i < d.length; i++) {
         const y = (d[i] / 128.0) * cvs.height / 2;
         if (i === 0) ctx.moveTo(i * sw, y); else ctx.lineTo(i * sw, y);
@@ -207,4 +188,5 @@ function draw() {
 </script>
 </body>
 </html>
+
 
