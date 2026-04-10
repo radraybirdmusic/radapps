@@ -3,58 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TRUMPET GARDEN v2.29</title>
+    <title>TRUMPET GARDEN v2.29b</title>
 </head>
 <body style="margin:0; background:#000; color:#fff; font-family:monospace; overflow:hidden; touch-action:none; width:100vw; height:100vh;">
 
     <div id="gate" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; justify-content:center; align-items:center;">
-        <button id="b-mic" style="padding:40px 80px; font-size:24px; background:#111; border:4px solid #0f0; color:#0f0; border-radius:20px; font-weight:bold; cursor:pointer;">IGNITE v2.29</button>
+        <button id="b-mic" style="padding:40px 80px; font-size:24px; background:#111; border:4px solid #0f0; color:#0f0; border-radius:20px; font-weight:bold; cursor:pointer;">IGNITE v2.29b</button>
     </div>
 
     <div id="ui" style="display:none; position:absolute; inset:0; z-index:100; background:#000;">
         
-        <div id="header" style="position:absolute; top:80px; width:100%; height:150px; background:#111; border-top:2px solid #333; border-bottom:3px solid #333; z-index:1500;">
-            <div id="rec-progress" style="position:absolute; bottom:0; left:0; height:4px; background:#0f0; width:0%;"></div>
+        <div id="header" style="position:absolute; top:80px; width:100%; height:160px; background:#111; border-top:2px solid #333; border-bottom:3px solid #333; z-index:1500;">
+            <div id="rec-progress" style="position:absolute; bottom:0; left:0; height:6px; background:#0f0; width:0%;"></div>
             
-            <div style="position:absolute; left:2%; top:20px; display:flex; align-items:center; gap:12px;">
-                <button id="b-rec" style="width:60px; height:60px; border-radius:50%; background:#222; border:2px solid #fff; font-size:28px;">🐝</button>
-                <div style="display:flex; flex-direction:column; gap:6px;">
-                    <button id="p-rec-play" style="background:#222; border:2px solid #ffcc00; color:#ffcc00; border-radius:6px; width:70px; height:32px; font-size:11px; font-weight:bold;">PLAY</button>
-                    <button id="s-rec-stop" style="background:#222; border:2px solid #ffcc00; color:#ffcc00; border-radius:6px; width:70px; height:32px; font-size:10px; font-weight:bold;">STOP ■</button>
+            <div style="position:absolute; left:20px; top:25px; display:flex; align-items:center; gap:12px;">
+                <button id="b-rec" style="width:65px; height:65px; border-radius:50%; background:#222; border:2px solid #fff; font-size:30px;">🐝</button>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button id="p-rec-play" style="background:#222; border:2px solid #ffcc00; color:#ffcc00; border-radius:8px; width:75px; height:35px; font-size:12px; font-weight:bold;">PLAY</button>
+                    <button id="s-rec-stop" style="background:#222; border:2px solid #ffcc00; color:#ffcc00; border-radius:8px; width:75px; height:35px; font-size:10px; font-weight:bold;">STOP</button>
                 </div>
             </div>
 
             <div style="position:absolute; left:50%; transform:translateX(-50%); top:25px; display:flex; gap:15px;">
-                <button id="p-lock" style="background:#222; border:2px solid #9d00ff; color:#fff; border-radius:8px; width:85px; height:65px; font-weight:bold; font-size:13px;" onclick="toggleLock()">LOCK</button>
-                <button id="b-save" style="background:#222; border:2px solid #44aaff; color:#44aaff; border-radius:8px; width:85px; height:65px; font-weight:bold; font-size:13px;">SAVE</button>
-                <button id="b-glitch" style="background:#222; border:2px solid #ff4444; color:#ff4444; border-radius:8px; width:85px; height:65px; font-weight:bold; font-size:13px;">GLITCH</button>
+                <button id="p-lock" style="background:#222; border:2px solid #9d00ff; color:#fff; border-radius:10px; width:90px; height:70px; font-weight:bold; font-size:14px;" onclick="toggleLock()">LOCK</button>
+                <button id="b-save" style="background:#222; border:2px solid #44aaff; color:#44aaff; border-radius:10px; width:90px; height:70px; font-weight:bold; font-size:14px;">SAVE</button>
+                <button id="b-glitch" style="background:#222; border:2px solid #ff4444; color:#ff4444; border-radius:10px; width:90px; height:70px; font-weight:bold; font-size:14px;">GLITCH</button>
             </div>
 
-            <div style="position:absolute; right:2%; top:20px; display:flex; align-items:center; gap:12px;">
-                <div style="display:flex; flex-direction:column; gap:6px;">
-                    <button id="p-file-play" style="background:#222; border:2px solid #fff; color:#fff; border-radius:6px; width:70px; height:32px; font-size:11px; font-weight:bold;">PLAY</button>
-                    <button id="s-file-stop" style="background:#222; border:2px solid #fff; color:#fff; border-radius:6px; width:70px; height:32px; font-size:10px; font-weight:bold;">STOP ■</button>
+            <div style="position:absolute; right:20px; top:25px; display:flex; align-items:center; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button id="p-file-play" style="background:#222; border:2px solid #fff; color:#fff; border-radius:8px; width:75px; height:35px; font-size:12px; font-weight:bold;">PLAY</button>
+                    <button id="s-file-stop" style="background:#222; border:2px solid #fff; color:#fff; border-radius:8px; width:75px; height:35px; font-size:10px; font-weight:bold;">STOP</button>
                 </div>
-                <button id="b-file" style="width:60px; height:60px; border-radius:50%; background:#222; border:2px solid #fff; font-size:28px;">📂</button>
+                <button id="b-file" style="width:65px; height:65px; border-radius:50%; background:#222; border:2px solid #fff; font-size:30px;">📂</button>
             </div>
 
-            <div id="diag" style="position:absolute; bottom:10px; width:100%; text-align:center; font-size:12px; color:#0f0; font-weight:bold;">v2.29: DROPPED & SPREAD</div>
+            <div id="diag" style="position:absolute; bottom:12px; width:100%; text-align:center; font-size:12px; color:#0f0; font-weight:bold;">v2.29 HARD-PIXEL ANCHORED</div>
             <input type="file" id="f-in" hidden accept="audio/*">
         </div>
 
-        <button class="ham" style="position:absolute; top:250px; left:5%; padding:15px 30px; border:3px solid #ffcc00; color:#ffcc00; background:#000; border-radius:8px; z-index:1000; font-weight:bold;" onpointerdown="hamMomentum(0.5)">HAM L-</button>
-        <button class="ham" style="position:absolute; top:250px; right:5%; padding:15px 30px; border:3px solid #ffcc00; color:#ffcc00; background:#000; border-radius:8px; z-index:1000; font-weight:bold;" onpointerdown="hamMomentum(2.0)">HAM R+</button>
+        <button class="ham" style="position:absolute; top:270px; left:6%; padding:18px 35px; border:3px solid #ffcc00; color:#ffcc00; background:#000; border-radius:10px; z-index:1000; font-weight:bold;" onpointerdown="hamMomentum(0.5)">HAM L-</button>
+        <button class="ham" style="position:absolute; top:270px; right:6%; padding:18px 35px; border:3px solid #ffcc00; color:#ffcc00; background:#000; border-radius:10px; z-index:1000; font-weight:bold;" onpointerdown="hamMomentum(2.0)">HAM R+</button>
 
-        <svg id="pad-left" style="position:absolute; bottom:30px; left:10%; width:40%; height:auto; z-index:400;" viewBox="0 0 220 280">
+        <div id="l-s" style="position:absolute; width:60px; height:240px; background:#111; border:2px solid #555; border-radius:30px; top:420px; left:5%; z-index:300;" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" style="width:100%; position:absolute; bottom:0; background:linear-gradient(to top, #FF4500, #fff); border-radius:30px; height:50%;"></div></div>
+        <div id="r-s" style="position:absolute; width:60px; height:240px; background:#111; border:2px solid #555; border-radius:30px; top:420px; right:5%; z-index:300;" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" style="width:100%; position:absolute; bottom:0; background:linear-gradient(to top, #FF4500, #fff); border-radius:30px; height:50%;"></div></div>
+
+        <svg id="pad-left" style="position:absolute; bottom:40px; left:14%; width:36%; height:auto; z-index:400;" viewBox="0 0 220 280">
             <g stroke="#fff" stroke-width="3" fill="none">
-                <circle cx="35" cy="45" r="26" onpointerdown="pulse(1.0)"/><circle cx="100" cy="45" r="26" onpointerdown="pulse(1.1)"/><circle cx="165" cy="45" r="26" onpointerdown="pulse(1.2)"/>
-                <circle cx="35" cy="125" r="26" onpointerdown="pulse(0.8)"/><circle cx="100" cy="125" r="26" onpointerdown="pulse(0.9)"/><circle cx="165" cy="125" r="26" onpointerdown="pulse(1.0)"/>
+                <circle cx="35" cy="50" r="28" onpointerdown="pulse(1.0)"/><circle cx="105" cy="50" r="28" onpointerdown="pulse(1.1)"/><circle cx="175" cy="50" r="28" onpointerdown="pulse(1.2)"/>
+                <circle cx="35" cy="140" r="28" onpointerdown="pulse(0.8)"/><circle cx="105" cy="140" r="28" onpointerdown="pulse(0.9)"/><circle cx="175" cy="140" r="28" onpointerdown="pulse(1.0)"/>
             </g>
         </svg>
-        <svg id="pad-right" style="position:absolute; bottom:30px; right:10%; width:40%; height:auto; z-index:400;" viewBox="0 0 220 280">
+        <svg id="pad-right" style="position:absolute; bottom:40px; right:14%; width:36%; height:auto; z-index:400;" viewBox="0 0 220 280">
             <g stroke="#fff" stroke-width="3" fill="none">
-                <circle cx="55" cy="45" r="26" onpointerdown="pulse(1.2)"/><circle cx="120" cy="45" r="26" onpointerdown="pulse(1.1)"/><circle cx="185" cy="45" r="26" onpointerdown="pulse(1.0)"/>
-                <circle cx="55" cy="125" r="26" onpointerdown="pulse(1.0)"/><circle cx="120" cy="125" r="26" onpointerdown="pulse(0.9)"/><circle cx="185" cy="125" r="26" onpointerdown="pulse(0.8)"/>
+                <circle cx="45" cy="50" r="28" onpointerdown="pulse(1.2)"/><circle cx="115" cy="50" r="28" onpointerdown="pulse(1.1)"/><circle cx="185" cy="50" r="28" onpointerdown="pulse(1.0)"/>
+                <circle cx="45" cy="140" r="28" onpointerdown="pulse(1.0)"/><circle cx="115" cy="140" r="28" onpointerdown="pulse(0.9)"/><circle cx="185" cy="140" r="28" onpointerdown="pulse(0.8)"/>
             </g>
         </svg>
     </div>
@@ -64,7 +67,7 @@
 let aCtx, anal, src, rec, chks = [], virtualCache = null, isL = false, isF = false, ints = {l:0.5, r:0.5}, activeSources = [], curPitch = 1.0;
 const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d'), diag = document.getElementById('diag'), prog = document.getElementById('rec-progress');
 
-// HANDSHAKE
+// 1. HARD HANDSHAKE
 document.getElementById('b-mic').onclick = async () => {
     document.getElementById('gate').style.display = 'none'; 
     document.getElementById('ui').style.display = 'block';
@@ -75,10 +78,10 @@ document.getElementById('b-mic').onclick = async () => {
         anal = aCtx.createAnalyser(); anal.fftSize = 1024;
         src.connect(anal);
         draw(); 
-    } catch (err) { diag.innerText = "MIC ERROR"; }
+    } catch (err) { diag.innerText = "MIC ERROR - CHECK SETTINGS"; }
 };
 
-// RECORDING (BEE)
+// 2. BEE RECORDING (3.5s)
 document.getElementById('b-rec').onclick = () => {
     if (rec && rec.state === "recording") return;
     chks = []; 
@@ -87,7 +90,7 @@ document.getElementById('b-rec').onclick = () => {
     rec.onstop = () => {
         const b = new Blob(chks, { type: 'audio/webm' });
         const r = new FileReader();
-        r.onloadend = () => { virtualCache = r.result; diag.innerText = "v2.29 RECORDED"; };
+        r.onloadend = () => { virtualCache = r.result; diag.innerText = "v2.29 CACHED"; };
         r.readAsDataURL(b);
     };
     rec.start();
@@ -99,7 +102,7 @@ document.getElementById('b-rec').onclick = () => {
     }, 50);
 };
 
-// PISTON PULSE
+// 3. AUDIO TRIGGER
 async function pulse(p) {
     if (!virtualCache || !aCtx) return;
     if (aCtx.state === 'suspended') await aCtx.resume();
@@ -109,13 +112,14 @@ async function pulse(p) {
         const s = aCtx.createBufferSource(); 
         s.buffer = buffer; 
         s.playbackRate.value = p * curPitch;
-        s.connect(anal); s.connect(aCtx.destination); 
+        s.connect(anal); 
+        s.connect(aCtx.destination); 
         s.start(0);
         activeSources.push(s); 
     });
 }
 
-// SLIDER & INVERSE GLITCH
+// 4. DIZZY SLIDERS & GLITCH
 function slide(e, s) {
     if (isL) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -131,7 +135,7 @@ function slide(e, s) {
     }
 }
 
-// NAV & FILE CONTROLS
+// 5. NAVIGATION & FILE
 function hamMomentum(m) { curPitch = m; diag.innerText = "OCTAVE: " + m; }
 
 document.getElementById('b-file').onclick = () => document.getElementById('f-in').click();
@@ -159,14 +163,14 @@ function toggleLock() {
     lb.style.borderColor = isL ? "#fff" : "#9d00ff";
 }
 
-// OSCILLOSCOPE DRAW
+// 6. VISUALIZER
 function draw() {
     requestAnimationFrame(draw); if (!anal) return;
     cvs.width = window.innerWidth; cvs.height = window.innerHeight;
     const d = new Uint8Array(anal.frequencyBinCount); 
     anal.getByteTimeDomainData(d);
     ctx.clearRect(0, 0, cvs.width, cvs.height); 
-    ctx.lineWidth = 5; 
+    ctx.lineWidth = 6; 
     ctx.strokeStyle = isF ? "#000" : "#0f0";
     ctx.beginPath(); 
     let sw = cvs.width / d.length;
