@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v2.19</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
+        .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        
+        /* v2.19: PULLING EVERYTHING DOWN */
+        #master-container { margin-top: 60px; position: relative; height: calc(100vh - 60px); width: 100vw; }
+        
+        #header { width: 100%; height: 130px; background: #111; border-bottom: 3px solid #333; position: relative; z-index: 1000; }
+        #rec-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--g); width: 0%; }
+        
+        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 90px; padding: 5px; }
+        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-align: center; height: 45px; }
+        .mini-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .mini-label { font-size: 9px; width: 55px; height: 22px; margin: 2px; }
+        
+        #diag { width: 100%; text-align: center; font-size: 10px; color: var(--g); padding-top: 5px; font-weight: bold; }
+        
+        .ham { position: absolute; top: 150px; padding: 12px 20px; font-size: 12px; border: 2px solid var(--y); color: var(--y); background: #000; border-radius: 6px; z-index: 600; }
+        #ham-l { left: 12%; } #ham-r { right: 12%; }
+        
+        .sld { position: absolute; width: 45px; height: 180px; background: #111; border: 2px solid #555; border-radius: 25px; top: 240px; z-index: 300; }
+        #l-s { left: 3%; } #r-s { right: 3%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 25px; pointer-events: none; }
+        
+        .pad-grid { position: absolute; bottom: 40px; width: 42%; height: auto; z-index: 200; }
+        #pad-left { left: 8%; } #pad-right { right: 8%; }
+        #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="master-container">
+    <div id="header">
+        <div id="rec-progress"></div>
+        <div class="nav-container">
+            <div style="display:flex; gap:8px;">
+                <button class="mini-btn" onpointerdown="startRec()">🐝</button>
+                <div style="display:flex; flex-direction:column;">
+                    <button class="btn mini-label" style="border-color:var(--y); color:var(--y);" onpointerdown="playCache()">PLAY</button>
+                    <button class="btn mini-label" style="border-color:var(--y); color:var(--y);" onpointerdown="stopAll()">STOP</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" style="width:70px;" onpointerdown="toggleLock()">LOCK</button>
+                <button class="btn" style="width:70px; border-color:#44aaff; color:#44aaff;" onpointerdown="saveMaster()">SAVE</button>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <div style="display:flex; flex-direction:column;">
+                    <button class="btn mini-label" style="border-color:var(--gry); color:var(--gry);" onpointerdown="playCache()">PLAY</button>
+                    <button class="btn mini-label" style="border-color:var(--gry); color:var(--gry);" onpointerdown="stopAll()">STOP</button>
+                </div>
+                <button class="mini-btn" onpointerdown="openFile()">📂</button>
+            </div>
+        </div>
+        <div id="diag">STATUS: v2.19 SPACED & LINKED</div>
+        <input type="file" id="f-in" hidden accept="audio/*">
+    </div>
+
+    <button id="ham-l" class="ham" onpointerdown="hamMomentum(0.5)">HAM L-</button>
+    <button id="ham-r" class="ham" onpointerdown="hamMomentum(2.0)">HAM R+</button>
+
+    <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" class="fill" style="height:50%"></div></div>
+    <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" class="fill" style="height:50%"></div></div>
+
+    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="30" cy="35" r="20" onpointerdown="pulse(event, 1.0)"/><circle cx="80" cy="35" r="20" onpointerdown="pulse(event, 1.1)"/><circle cx="130" cy="35" r="20" onpointerdown="pulse(event, 1.2)"/><circle cx="180" cy="35" r="6" onpointerdown="pulse(event, 1.5)"/>
+            <circle cx="30" cy="90" r="20" onpointerdown="pulse(event, 0.8)"/><circle cx="80" cy="90" r="20" onpointerdown="pulse(event, 0.9)"/><circle cx="130" cy="90" r="20" onpointerdown="pulse(event, 1.0)"/><circle cx="180" cy="90" r="6" onpointerdown="pulse(event, 1.2)"/>
+        </g>
+    </svg>
+
+    <svg id="pad-right" class="pad-grid" viewBox="0 0 220 280">
+        <g stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="40" cy="35" r="6" onpointerdown="pulse(event, 1.5)"/><circle cx="90" cy="35" r="20" onpointerdown="pulse(event, 1.2)"/><circle cx="140" cy="35" r="20" onpointerdown="pulse(event, 1.1)"/><circle cx="190" cy="35" r="20" onpointerdown="pulse(event, 1.0)"/>
+            <circle cx="40" cy="90" r="6" onpointerdown="pulse(event, 1.2)"/><circle cx="90" cy="90" r="20" onpointerdown="pulse(event, 1.0)"/><circle cx="140" cy="90" r="20" onpointerdown="pulse(event, 0.9)"/><circle cx="190" cy="90" r="20" onpointerdown="pulse(event, 0.8)"/>
+        </g>
+    </svg>
+</div>
+
+<canvas id="osc"></canvas>
+
+<script>
+let aCtx, anal, masterBus, rec, chks = [], virtualCache = null, activeSources = [], curPitch = 1.0, isL = false;
+
+async function wake() {
+    if (!aCtx) {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        anal = aCtx.createAnalyser(); anal.fftSize = 512;
+        masterBus = aCtx.createMediaStreamDestination();
+        anal.connect(aCtx.destination);
+        draw();
+    }
+    if (aCtx.state === 'suspended') await aCtx.resume();
+}
+
+async function pulse(e, base) {
+    await wake();
+    if (!virtualCache) return;
+    const res = await fetch(virtualCache);
+    const ab = await res.arrayBuffer();
+    aCtx.decodeAudioData(ab, (buffer) => {
+        const s = aCtx.createBufferSource();
+        s.buffer = buffer; 
+        s.playbackRate.value = base * curPitch;
+        s.connect(anal); s.connect(masterBus);
+        s.start(0); activeSources.push(s); 
+    });
+}
+
+function draw() {
+    requestAnimationFrame(draw); if (!anal) return;
+    const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    const t = new Uint8Array(anal.frequencyBinCount); anal.getByteTimeDomainData(t);
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.lineWidth = 6; ctx.strokeStyle = "#0f0";
+    ctx.beginPath(); let sw = cvs.width / t.length;
+    for (let i = 0; i < t.length; i++) {
+        const y = (t[i] / 128.0) * cvs.height / 2;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sw, y);
+    }
+    ctx.stroke();
+}
+
+function startRec() {
+    wake(); if (rec && rec.state === "recording") return;
+    chks = []; rec = new MediaRecorder(masterBus.stream);
+    rec.ondataavailable = e => chks.push(e.data);
+    rec.onstop = () => {
+        const b = new Blob(chks, { type: 'audio/webm' });
+        const r = new FileReader();
+        r.onloadend = () => { virtualCache = r.result; document.getElementById('diag').innerText = "v2.19 RECORDED"; };
+        r.readAsDataURL(b);
+    };
+    rec.start();
+    let s = Date.now();
+    let i = setInterval(() => {
+        let e = Date.now() - s;
+        document.getElementById('rec-progress').style.width = Math.min((e / 3500) * 100, 100) + '%';
+        if (e >= 3500) { clearInterval(i); rec.stop(); }
+    }, 50);
+}
+
+function hamMomentum(m) { curPitch = m; document.getElementById('diag').innerText = `OCTAVE: ${m}`; }
+function openFile() { document.getElementById('f-in').click(); }
+document.getElementById('f-in').onchange = (e) => {
+    const r = new FileReader(); r.onload = (re) => { virtualCache = re.target.result; document.getElementById('diag').innerText = "LOADED"; };
+    r.readAsDataURL(e.target.files[0]);
+};
+function playCache() { pulse({target: null}, 1.0); }
+function stopAll() { activeSources.forEach(s => s.stop()); activeSources = []; }
+function saveMaster() { if(virtualCache) { const l = document.createElement('a'); l.href = virtualCache; l.download = "master.webm"; l.click(); } }
+function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCKED" : "LOCK"; }
+</script>
+</body>
+</html>
