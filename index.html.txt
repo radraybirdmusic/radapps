@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CRi1: BANSHEE v2.33 - WIDE-LOAD FIX</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --cyan: #00FFFF; }
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
+        
+        /* THE FIX: Ensure the gate and UI occupy the full viewport immediately */
+        #gate, #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        #gate { z-index: 2000; background: #000; justify-content: center; align-items: center; text-align: center; }
+        #ui { z-index: 100; display: none; }
+
+        #header { width: 100%; height: 110px; background: #111; border-bottom: 2px solid #333; flex-shrink: 0; }
+        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 80px; width: 100%; }
+        
+        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; height: 40px; width: 90px; }
+        
+        /* GRID FIX: Centering the pads so they don't crunch left */
+        .stage-area { flex-grow: 1; position: relative; width: 100%; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; }
+        
+        .pad-grid { width: 45%; height: auto; cursor: pointer; }
+        #canvas-wrap { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+        
+        #diag { width: 100%; text-align: center; font-size: 10px; color: var(--g); font-weight: bold; height: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="gate">
+    <h1 style="color:var(--cyan); letter-spacing: 5px;">BANSHEE v2.33</h1>
+    <p style="color:var(--y); font-size: 10px;">[ VIEWPORT ALIGNMENT ACTIVATED ]</p>
+    <button id="b-ignite" class="btn" style="width:240px; height:70px; font-size:20px; border-color:var(--cyan);">IGNITE FORGE</button>
+</div>
+
+<div id="ui">
+    <div id="header">
+        <div class="nav-container">
+            <button class="btn" onclick="document.getElementById('f-in').click()" style="border-color:var(--cyan);">📂 LOAD ALL</button>
+            <button id="b-stop" class="btn" style="border-color:red;">■ STOP</button>
+            <button class="btn" onclick="document.body.classList.toggle('fae')">✨ FAE</button>
+        </div>
+        <div id="diag">STATUS: SYSTEM OPEN</div>
+        <input type="file" id="f-in" hidden accept="*/*">
+    </div>
+
+    <div class="stage-area">
+        <svg id="pad-left" class="pad-grid" viewBox="0 0 220 230">
+            <g stroke="#fff" stroke-width="2" fill="none" pointer-events="all">
+                <circle cx="110" cy="110" r="80" onpointerdown="pulse(1.0)" />
+                <text x="110" y="115" fill="#fff" text-anchor="middle" style="font-size:20px;">ROOT</text>
+            </g>
+        </svg>
+        <svg id="pad-right" class="pad-grid" viewBox="0 0 220 230">
+            <g stroke="#fff" stroke-width="2" fill="none" pointer-events="all">
+                <rect x="30" y="30" width="160" height="160" stroke="var(--cyan)" onpointerdown="pulse(2.0)" />
+                <text x="110" y="115" fill="var(--cyan)" text-anchor="middle" style="font-size:20px;">BITE</text>
+            </g>
+        </svg>
+    </div>
+
+    <div id="canvas-wrap">
+        <canvas id="main-cvs"></canvas>
+    </div>
+</div>
+
+<script>
+let aCtx, anal, virtualCache = null, activeSources = [];
+const cvs = document.getElementById('main-cvs'), ctx = cvs.getContext('2d'), diag = document.getElementById('diag');
+
+document.getElementById('b-ignite').onclick = async () => {
+    // TRIGGER SYSTEM REDRAW
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('ui').style.display = 'flex';
+    
+    aCtx = new (window.AudioContext || window.webkitAudioContext)();
+    anal = aCtx.createAnalyser();
+    anal.fftSize = 2048;
+    anal.connect(aCtx.destination);
+    
+    // FORCED RESIZE EVENT TO UN-CRUNCH THE FRONT END
+    window.dispatchEvent(new Event('resize'));
+    animate();
+};
+
+document.getElementById('f-in').onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = (event) => {
+        virtualCache = event.target.result;
+        diag.innerText = "📂 LOADED: " + file.name.toUpperCase();
+    };
+    r.readAsArrayBuffer(file);
+};
+
+async function pulse(rate) {
+    if (!virtualCache || !aCtx) return;
+    if (aCtx.state === 'suspended') await aCtx.resume();
+    
+    const bufferClone = virtualCache.slice(0);
+    aCtx.decodeAudioData(bufferClone, (buffer) => {
+        const s = aCtx.createBufferSource();
+        s.buffer = buffer;
+        s.playbackRate.value = rate;
+        s.connect(anal);
+        s.start(0);
+        activeSources.push(s);
+    });
+}
+
+document.getElementById('b-stop').onclick = () => {
+    activeSources.forEach(s => { try { s.stop(); } catch(e) {} });
+    activeSources = [];
+};
+
+function animate() {
+    cvs.width = window.innerWidth;
+    cvs.height = window.innerHeight;
+    const data = new Uint8Array(anal.frequencyBinCount);
+    anal.getByteTimeDomainData(data);
+    
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "var(--cyan)";
+    ctx.beginPath();
+    
+    let x = 0;
+    let sliceWidth = cvs.width / data.length;
+    for (let i = 0; i < data.length; i++) {
+        let v = data[i] / 128.0;
+        let y = v * cvs.height / 2;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        x += sliceWidth;
+    }
+    ctx.stroke();
+    requestAnimationFrame(animate);
+}
+</script>
+</body>
+</html>
+
