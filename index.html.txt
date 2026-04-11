@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CRi1: BANSHEE - DAIRY DRAGON EDITION v2.32.1</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --cyan: #00FFFF; --magenta: #FF00FF; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; width: 100vw; height: 100vh; }
+        .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        #gate { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #ui { position: absolute; inset: 0; z-index: 100; display: none; background: #000; }
+        #header { position: absolute; top: 0; width: 100%; height: 110px; background: #111; border-bottom: 2px solid #333; z-index: 1500; }
+        .nav-container { display: flex; align-items: center; justify-content: space-around; height: 80px; }
+        .btn { background: #222; border: 2px solid var(--p); color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px; height: 35px; width: 70px; }
+        #diag { width: 100%; text-align: center; font-size: 10px; color: var(--g); font-weight: bold; padding-top: 5px; }
+        #tinyguy { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border: 1px solid var(--cyan); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .sld { position: absolute; width: 40px; height: 150px; background: #111; border: 2px solid #555; border-radius: 20px; top: 200px; z-index: 300; }
+        #l-s { left: 4%; } #r-s { right: 4%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--o), #fff); border-radius: 20px; }
+        .pad-grid { position: absolute; bottom: 20px; width: 42%; height: auto; z-index: 400; cursor: pointer; }
+        #pad-left { left: 4%; } #pad-right { right: 4%; }
+        #canvas-wrap { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="gate">
+    <h1 style="color:var(--cyan); margin-bottom:20px;">CRi1: BANSHEE v2.32.1</h1>
+    <button id="b-ignite" class="btn" style="width:200px; height:60px; font-size:18px;">IGNITE FORGE</button>
+</div>
+
+<div id="ui">
+    <div id="header">
+        <div id="tinyguy">+</div>
+        <div class="nav-container">
+            <button id="b-fae" class="btn" onclick="toggleFae()">✨ FAE</button>
+            <button id="b-flip" class="btn" onclick="toggleFlip()">🙃 FLIP</button>
+            <button id="b-glitch" class="btn" style="border-color:red;">💥 GLITCH</button>
+            <button id="b-echo" class="btn" style="border-color:var(--cyan);">ROAD ECHO</button>
+        </div>
+        <div id="diag">STATUS: LAMINAR FLOW ACTIVE // BANSHEE READY</div>
+    </div>
+
+    <div id="l-s" class="sld"><div id="l-f" class="fill" style="height:50%"></div></div>
+    <div id="r-s" class="sld"><div id="r-f" class="fill" style="height:50%"></div></div>
+
+    <svg id="pad-left" class="pad-grid" viewBox="0 0 220 230">
+        <g stroke="#fff" stroke-width="2.5" fill="none" pointer-events="all">
+            <circle cx="40" cy="40" r="25" onpointerdown="triggerNote(1.0)" />
+            <circle cx="110" cy="40" r="25" onpointerdown="triggerNote(1.2)" />
+            <circle cx="180" cy="40" r="25" onpointerdown="triggerNote(1.5)" />
+            <circle cx="110" cy="110" r="35" onpointerdown="triggerNote(0.8)" />
+            <circle cx="110" cy="185" r="25" onpointerdown="triggerNote(0.5)" />
+        </g>
+    </svg>
+
+    <svg id="pad-right" class="pad-grid" viewBox="0 0 220 230">
+        <g stroke="#fff" stroke-width="2.5" fill="none" pointer-events="all">
+            <rect x="20" y="20" width="180" height="180" stroke="var(--cyan)" />
+            <circle cx="110" cy="110" r="50" onpointerdown="triggerNote(2.0)" />
+        </g>
+    </svg>
+
+    <div id="canvas-wrap">
+        <canvas id="main-cvs"></canvas>
+    </div>
+</div>
+
+<script>
+let aCtx, anal, isFae = false, isFlipped = false, frame = 0;
+let activeOscs = [];
+const cvs = document.getElementById('main-cvs'), ctx = cvs.getContext('2d');
+const tiny = document.getElementById('tinyguy');
+
+document.getElementById('b-ignite').onclick = async () => {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('ui').style.display = 'block';
+    aCtx = new (window.AudioContext || window.webkitAudioContext)();
+    anal = aCtx.createAnalyser();
+    anal.fftSize = 2048;
+    anal.connect(aCtx.destination);
+    animate();
+};
+
+function triggerNote(pitch) {
+    if(!aCtx) return;
+    if(aCtx.state === 'suspended') aCtx.resume();
+    
+    const osc = aCtx.createOscillator();
+    const gain = aCtx.createGain();
+    const filter = aCtx.createBiquadFilter();
+    
+    // THE SOUTHPAW FLIP LOGIC
+    let finalPitch = isFlipped ? (1 / pitch) * 2 : pitch;
+    
+    osc.type = isFae ? 'sawtooth' : 'triangle';
+    osc.frequency.setValueAtTime(220 * finalPitch, aCtx.currentTime);
+    
+    // ROAD ECHO (Permanent Floor)
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2500, aCtx.currentTime);
+    filter.Q.value = 10;
+
+    gain.gain.setValueAtTime(0.3, aCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 1.5);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(anal);
+
+    osc.start();
+    osc.stop(aCtx.currentTime + 1.5);
+    
+    // TinyGuy Flicker
+    tiny.style.borderColor = "var(--magenta)";
+    setTimeout(() => tiny.style.borderColor = "var(--cyan)", 100);
+}
+
+function toggleFae() {
+    isFae = !isFae;
+    document.body.classList.toggle('fae');
+}
+
+function toggleFlip() {
+    isFlipped = !isFlipped;
+    document.getElementById('diag').innerText = isFlipped ? "SOUTHPAW INVERSION ACTIVE" : "LAMINAR FLOW ACTIVE";
+}
+
+function animate() {
+    frame++;
+    cvs.width = window.innerWidth;
+    cvs.height = window.innerHeight;
+    
+    const data = new Uint8Array(anal.frequencyBinCount);
+    anal.getByteTimeDomainData(data);
+    
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    
+    // TIKKA-HEAT VISUALIZER (Freddy's Breath)
+    ctx.beginPath();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = isFae ? "var(--magenta)" : "var(--o)";
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = isFae ? "var(--cyan)" : "var(--o)";
+    
+    let sliceWidth = cvs.width / data.length;
+    let x = 0;
+
+    for (let i = 0; i < data.length; i++) {
+        let v = data[i] / 128.0;
+        let y = v * cvs.height / 2;
+        
+        // 16Hz SQUID PULSE EFFECT
+        let wiggle = Math.sin(frame * 0.1) * 10;
+        
+        if (i === 0) ctx.moveTo(x, y + wiggle);
+        else ctx.lineTo(x, y + wiggle);
+        x += sliceWidth;
+    }
+    
+    ctx.lineTo(cvs.width, cvs.height / 2);
+    ctx.stroke();
+
+    // TINYGUY ROTATION
+    tiny.style.transform = `rotate(${frame * 5}deg)`;
+
+    requestAnimationFrame(animate);
+}
+</script>
+</body>
+</html>
+
