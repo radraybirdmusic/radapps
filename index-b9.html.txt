@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>TRUMPET GARDEN v2.0.2 [RHODOS FORGE]</title>
+    <style>
+        :root { --p-accent: #8a2be2; --sentinel-cyan: #00FFFF; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #050510; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; font-family: 'Courier New', monospace; }
+        
+        /* FAE Glitch Inversion */
+        .fae-active { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        
+        #starter, #lesson-prompt { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,5,15,0.95); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--sentinel-cyan); border: 8px double var(--sentinel-cyan); box-sizing: border-box; }
+        
+        /* GATOR-GRID Control Dock */
+        #controls { position: relative; width: 100%; padding-top: 60px; background: #080815; display: flex; flex-direction: column; align-items: center; gap: 4px; border-bottom: 2px solid var(--sentinel-cyan); z-index: 1000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.2); }
+        .ctrl-row { display: flex; justify-content: center; gap: 4px; width: 95%; }
+        .cmd-btn { padding: 10px 2px; background: #000; color: var(--sentinel-cyan); border: 1px solid var(--sentinel-cyan); border-radius: 4px; font-weight: bold; font-size: 10px; min-width: 60px; text-align: center; cursor: pointer; }
+        .active-mode { background: var(--sentinel-cyan) !important; color: #000 !important; }
+
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+        #diag-hud { position: fixed; bottom: 10px; left: 10px; font-size: 10px; color: var(--sentinel-cyan); z-index: 2000; text-transform: uppercase; }
+    </style>
+</head>
+<body onpointerdown="handleDown(event)" onpointermove="handleMove(event)" onpointerup="handleUp(event)">
+    <div id="diag-hud">SYSTEM: ARP-3690 | BRIDGE: TINYGUY_v1.02 | STATUS: BRIDGE_MANIFEST_CODIFIED</div>
+    
+    <div id="starter" onclick="initiateNexus()">
+        <h1>RHODOS FORGE</h1>
+        <h2>ALEZU_v2.0.2</h2>
+        <p style="border: 1px solid var(--sentinel-cyan); padding: 10px;">[ INITIATE AURORA_NEXUS ]</p>
+    </div>
+
+<script>
+    // RHODOS TINYGUY CONFIG
+    const bridge = new BroadcastChannel('tinyguy_bridge');
+    let aCtx, anal, isTrumpetMode = false, frazzle = 1.0;
+    let toneMode = 0, sanctuaryMode = 4, soilMode = 4; // ALEZU + ROSSLYN + GLASS
+    const oscs = new Map(), pointers = new Map();
+
+    // 528Hz Harmonic Base
+    const shelfFreqs = { 10: 132.00, 11: 198.00, 12: 264.00, 13: 330.00 }; 
+
+    function initiateNexus() {
+        document.getElementById('starter').style.display = 'none';
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        forgeAlezu();
+    }
+
+    function forgeAlezu() {
+        // --- ALEZU FORGE ADDITION ---
+        toneMode = 0; // ALEZU
+        sanctuaryMode = 4; // ROSSLYN
+        soilMode = 4; // GLASS
+        console.log("⚡ [RHODOS] Sentinel State Active. Bridge MTU: 1024.");
+    }
+
+    // BRIDGE TRANSMITTER: HAMMER_SLAM
+    function hamSlam(intensity) {
+        frazzle = intensity * 2.5;
+        bridge.postMessage({
+            header: { bridge_id: "TINYGUY_v1.02", protocol: "AURORA_NEXUS" },
+            payload_forge: { action: "HAMMER_SLAM", params: { frequency: 528.0, soil: "GLASS", intensity: intensity } }
+        });
+    }
+
+    // BRIDGE RECEIVER: NEXUS_SYNC
+    bridge.onmessage = (e) => {
+        const { payload_forge } = e.data;
+        if (payload_forge.action === "HAMMER_SLAM") {
+            frazzle = payload_forge.params.intensity * 2.5;
+            triggerKinematicPulse();
+        }
+    };
+
+    function playNote(idx, pId, mir, vx, vy) {
+        if(oscs.has(pId)) return;
+        const g = aCtx.createGain();
+        let freq = shelfFreqs[idx] || 261.63;
+        const o = aCtx.createOscillator();
+        
+        // Rhodos Logic: 1/4" Socket Joint Tension
+        o.type = 'sawtooth'; // Glass Bite
+        o.frequency.setTargetAtTime(freq, aCtx.currentTime, 0.05);
+        g.gain.setTargetAtTime(0.2, aCtx.currentTime, 0.05);
+        
+        o.connect(g); o.start(); g.connect(aCtx.destination);
+        oscs.set(pId, {o, g, idx, x: vx, y: vy});
+        hamSlam(1.0); // Slam on touch
+    }
+
+    function handleDown(e) {
+        if(!aCtx) return;
+        let cD = window.innerWidth*0.32, yM = window.innerHeight*0.5;
+        // Simple Grid Detection
+        if(e.clientX < 100) playNote(10, e.pointerId, false, e.clientX, e.clientY);
+        else playNote(12, e.pointerId, false, e.clientX, e.clientY);
+    }
+
+    function handleUp(e) {
+        if(oscs.has(e.pointerId)) {
+            let v = oscs.get(e.pointerId);
+            v.g.gain.setTargetAtTime(0, aCtx.currentTime, 0.05);
+            setTimeout(() => { v.o.stop(); oscs.delete(e.pointerId); }, 100);
+        }
+    }
+
+    function animate() {
+        const canvas = document.getElementById('mainCanvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        
+        // Sentinel Glow Pull
+        ctx.shadowBlur = 30 * frazzle;
+        ctx.shadowColor = "#00FFFF";
+        
+        // Render Rhodos "Ghost Trace"
+        ctx.strokeStyle = "#00FFFF";
+        oscs.forEach(v => {
+            ctx.beginPath();
+            ctx.moveTo(window.innerWidth/2, window.innerHeight);
+            ctx.lineTo(v.x, v.y); // Kinematic Bone Structure
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(v.x, v.y, 40 * frazzle, 0, Math.PI*2);
+            ctx.stroke();
+        });
+
+        if(frazzle > 1.0) frazzle *= 0.96; // 60fps frame-lock decay
+        requestAnimationFrame(animate);
+    }
+    animate();
+</script>
+</body>
+</html>
+
