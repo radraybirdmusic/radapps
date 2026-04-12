@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v1.10.0: TINYGUY COMMAND</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; --cyan: #00FFFF; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; }
+        .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        #ui { position: absolute; inset: 0; z-index: 100; display: block; background: #000; }
+        #header { width: 100%; height: 110px; background: rgba(20,20,20,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 2px solid #333; position: relative; }
+        #rec-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--cyan); width: 0%; transition: width 0.1s linear; }
+        .h-row { display: flex; align-items: flex-start; justify-content: center; gap: 8px; width: 98%; }
+        .btn { background: #111; border: 2px solid var(--p); color: #fff; padding: 10px 4px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-align: center; width: 100%; }
+        #diag { font-size: 9px; color: var(--cyan); margin-top: 5px; text-transform: uppercase; font-weight: bold; }
+        #ctrl { position: absolute; top: 130px; width: 100%; display: flex; justify-content: center; gap: 40px; z-index: 200; }
+        .h-btn { width: 85px; height: 85px; border-radius: 50%; background: #111; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; cursor: pointer; }
+        .sld { position: absolute; width: 50px; height: 260px; background: #111; border: 2px solid #555; border-radius: 25px; top: 250px; pointer-events: auto; z-index: 300; }
+        #l-s { left: 4%; } #r-s { right: 4%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--cyan), #fff); border-radius: 25px; pointer-events: none; }
+        .pad-c { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; gap: 40px; pointer-events: none; }
+        #osc { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+        .ham { position: absolute; top: 120px; padding: 5px 10px; font-size: 10px; border: 1px solid var(--cyan); color: var(--cyan); background: #000; border-radius: 4px; cursor: pointer; z-index: 500; }
+    </style>
+</head>
+<body>
+<div id="ui">
+    <div id="header">
+        <div id="rec-progress"></div>
+        <div class="h-row">
+            <div class="col-btn"><button id="p-rec-play" class="btn" style="border-color:var(--cyan); color:var(--cyan);">PLAY 🐝</button><button id="s-rec-stop" class="btn" style="font-size:9px; border-color:var(--cyan); opacity:0.8;">STOP ■</button></div>
+            <button id="p-lock" class="btn" onclick="toggleLock()">LOCK: OFF</button>
+            <button class="btn" style="border-color:#44aaff; color:#44aaff;">SAVE 💾</button>
+            <button class="btn" style="border-color:#ff4444; color:#ff4444;">GLITCH 💥</button>
+            <div class="col-btn"><button id="p-file-play" class="btn" style="border-color:var(--gry); color:var(--gry);">PLAY 📂</button></div>
+        </div>
+        <div id="diag">SYSTEM: ARP-3690 | STATUS: KINEMATIC_LOCKED</div>
+    </div>
+
+    <button class="ham" style="left: 4%;" onpointerdown="hamMomentum(0.94)">HAM L-</button>
+    <button class="ham" style="right: 4%;" onpointerdown="hamMomentum(1.06)">HAM R+</button>
+
+    <div id="ctrl">
+        <div style="text-align:center;"><button id="b-rec" class="h-btn">🐝</button></div>
+        <div style="text-align:center;"><button id="b-file" class="h-btn">📂</button></div>
+    </div>
+    
+    <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')"><div id="l-f" class="fill" style="height:50%"></div></div>
+    <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')"><div id="r-f" class="fill" style="height:50%"></div></div>
+
+    <div class="pad-c" id="gator-grid">
+        <svg width="220" height="220"><circle cx="110" cy="110" r="100" fill="none" stroke="#00FFFF" stroke-width="1" stroke-dasharray="5,5"/></svg>
+    </div>
+</div>
+<canvas id="osc"></canvas>
+<script>
+const bridge = new BroadcastChannel('tinyguy_bridge');
+let aCtx, anal, src, rec, chks = [], virtualCache = null, isL = false, isF = false, ints = {l:0.5, r:0.5}, activeSources = [];
+let currentArpPitch = 1.0;
+let frazzle = 1.0; // ROAD RATTLE SYNC
+
+window.onload = async () => {
+    try {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        src = aCtx.createMediaStreamSource(s); anal = aCtx.createAnalyser(); 
+    } catch (e) { diag.innerText = "NEXUS OFFLINE"; }
+};
+
+// TINYGUY COMMAND: MOMENTUM & FRAZZLE
+async function hamMomentum(multiplier) {
+    if (!virtualCache) return;
+    currentArpPitch *= multiplier;
+    frazzle = 2.5 * currentArpPitch; // Tension Multiplier logic
+    
+    const res = await fetch(virtualCache);
+    const ab = await res.arrayBuffer();
+    aCtx.decodeAudioData(ab, (buffer) => {
+        const s = aCtx.createBufferSource();
+        s.buffer = buffer; s.playbackRate.value = currentArpPitch;
+        s.connect(anal); anal.connect(aCtx.destination);
+        s.start(0);
+        activeSources.push(s);
+        bridge.postMessage({ header: { protocol: "AURORA_NEXUS" }, payload: { action: "HAMMER_SLAM", params: { frequency: currentArpPitch * 528 } } });
+    });
+}
+
+function draw() {
+    requestAnimationFrame(draw);
+    if (!anal) return;
+    const cvs = document.getElementById('osc'), ctx = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    
+    // THE FRAZZLE SHAKE (Road Sync)
+    let shakeX = (Math.random() - 0.5) * frazzle;
+    let shakeY = (Math.random() - 0.5) * frazzle;
+    
+    const d = new Uint8Array(anal.frequencyBinCount); anal.getByteTimeDomainData(d);
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
+    ctx.lineWidth = 4; ctx.strokeStyle = isF ? "#000" : "#00FFFF";
+    ctx.shadowBlur = 15; ctx.shadowColor = "#00FFFF";
+    
+    ctx.beginPath();
+    let x = 0; const sw = cvs.width / d.length;
+    for (let i = 0; i < d.length; i++) {
+        let y = (d[i] / 128.0) * cvs.height / 2;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        x += sw;
+    }
+    ctx.stroke();
+    ctx.restore();
+    if(frazzle > 1.0) frazzle *= 0.98; // Natural Decay
+}
+function slide(e, s) {
+    if (isL || (e.buttons !== 1 && !e.touches)) return;
+    const r = e.currentTarget.getBoundingClientRect(); const y = e.touches ? e.touches[0].clientY : e.clientY;
+    ints[s] = Math.max(0, Math.min(1.5, (1 - (y - r.top) / r.height) * 1.5));
+    document.getElementById(s + '-f').style.height = (ints[s] / 1.5) * 100 + "%";
+    isF = (ints.l > 1.0 || ints.r > 1.0); document.body.classList.toggle('fae', isF);
+}
+function toggleLock() { isL = !isL; document.getElementById('p-lock').innerText = isL ? "LOCK: ON" : "LOCK: OFF"; }
+draw();
+</script>
+</body>
+</html>
+
