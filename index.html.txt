@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANSHEE MASTER v3.0.0 | FULL CONSOLE</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body { margin: 0; background: #050505; color: #00ff00; font-family: 'Courier New', monospace; overflow: hidden; }
+        canvas { display: block; margin: auto; }
+    </style>
+</head>
+<body>
+<script>
+/**
+ * CRi1 MASTER PHASE MAP - BANSHEE FULL BUILD
+ * Logic: 18-Bucket Integration | UI: 9x9 Segmented Matrix
+ * Characters: ALEZU (Bucket 01) | Mode: Frazzle 100%
+ */
+
+let pistons = [];
+let matrixGrid = [];
+let frazzle = 1.0; 
+let ghostTrace = [];
+let secretColors = false;
+
+// 18-Bucket Phase Map (Frequencies)
+const phaseMap = [
+    220.00, 246.94, 277.18, 293.66, 329.63, 369.99, 392.00, 440.00, 493.88,
+    523.25, 587.33, 659.25, 698.46, 739.99, 783.99, 880.00, 987.77, 1046.50
+];
+
+function setup() {
+    createCanvas(windowWidth, windowHeight);
+    rectMode(CENTER);
+    
+    // Build 9x9 Background Matrix
+    let spacing = 45;
+    for(let i=0; i<9; i++) {
+        for(let j=0; j<9; j++) {
+            matrixGrid.push({
+                x: width/2 - (4 * spacing) + (i * spacing),
+                y: height/2 - (4 * spacing) + (j * spacing),
+                rot: 0,
+                targetRot: 0
+            });
+        }
+    }
+
+    // Initialize 3+1 Symmetric Inward Satellites
+    initSymmetricPistons();
+}
+
+function initSymmetricPistons() {
+    let centerY = height * 0.7;
+    let centerX = width / 2;
+    // LEFT
+    pistons.push({x: centerX - 180, y: centerY, size: 60, type: 'BIG', bucket: 0});
+    pistons.push({x: centerX - 120, y: centerY, size: 60, type: 'BIG', bucket: 1});
+    pistons.push({x: centerX - 60,  y: centerY, size: 60, type: 'BIG', bucket: 2});
+    pistons.push({x: centerX - 20,  y: centerY + 15, size: 20, type: 'LITTLE', bucket: 14}); // THE OPEN
+
+    // RIGHT (Mirror)
+    pistons.push({x: centerX + 20,  y: centerY + 15, size: 20, type: 'LITTLE', bucket: 14}); // THE OPEN
+    pistons.push({x: centerX + 60,  y: centerY, size: 60, type: 'BIG', bucket: 3});
+    pistons.push({x: centerX + 120, y: centerY, size: 60, type: 'BIG', bucket: 4});
+    pistons.push({x: centerX + 180, y: centerY, size: 60, type: 'BIG', bucket: 5});
+}
+
+function draw() {
+    // 100% FRAZZLE ROAD RATTLE
+    let shakeX = random(-frazzle, frazzle);
+    let shakeY = random(-frazzle, frazzle);
+    translate(shakeX, shakeY);
+
+    background(5, 5, 15);
+    
+    drawBackgroundMatrix();
+    drawGhostTrace();
+    drawPistons();
+    drawAlezu(width/2, height * 0.9);
+    drawHUD();
+}
+
+function drawBackgroundMatrix() {
+    stroke(0, 255, 0, 40);
+    noFill();
+    matrixGrid.forEach(m => {
+        push();
+        translate(m.x, m.y);
+        rotate(m.rot);
+        rect(0, 0, 30, 30);
+        pop();
+        // Segmented Rotation Logic
+        m.rot = lerp(m.rot, m.targetRot, 0.1);
+    });
+}
+
+function drawPistons() {
+    pistons.forEach(p => {
+        let d = dist(mouseX, mouseY, p.x, p.y);
+        let active = mouseIsPressed && d < p.size/2;
+
+        if(active) {
+            fill(secretColors ? 255 : 0, 255, 0);
+            rotateMatrix(p.x, p.y);
+            ghostTrace.push({x: mouseX, y: mouseY, life: 255});
+        } else {
+            fill(20, 20, 30);
+        }
+
+        stroke(0, 255, 0);
+        push();
+        translate(p.x, p.y);
+        p.type === 'BIG' ? rect(0, 0, p.size, p.size, 8) : ellipse(0, 0, p.size, p.size);
+        pop();
+    });
+}
+
+function rotateMatrix(cx, cy) {
+    matrixGrid.forEach(m => {
+        let d = dist(cx, cy, m.x, m.y);
+        if(d < 150) m.targetRot += 0.5;
+    });
+}
+
+function drawAlezu(x, y) {
+    let frame = floor(frameCount / 12) % 4; // 4-Frame Flippy Guy
+    push();
+    translate(x, y);
+    if (frame === 1) scale(-1, 1); // Mirror Flip
+    if (frame === 2) translate(random(-3,3), random(-3,3)); // Frazzle
+    
+    fill(frame === 3 && secretColors ? [255, 0, 255] : [0, 255, 0]);
+    noStroke();
+    rect(0, 0, 60, 20); // Body
+    rect(20, -15, 30, 20); // Head
+    fill(0); rect(35, -15, 5, 5); // Eye
+    pop();
+}
+
+function drawGhostTrace() {
+    noFill();
+    for (let i = ghostTrace.length - 1; i >= 0; i--) {
+        let g = ghostTrace[i];
+        stroke(secretColors ? 255 : 0, 255, 255, g.life);
+        ellipse(g.x, g.y, (255 - g.life)/4);
+        g.life -= 4;
+        if(g.life <= 0) ghostTrace.splice(i, 1);
+    }
+}
+
+function drawHUD() {
+    resetMatrix();
+    fill(0, 255, 0);
+    textAlign(LEFT);
+    textSize(12);
+    text("BANSHEE MASTER v3.0.0", 20, 30);
+    text("LOCUST -> SALISBURY: 26mi DELTA", 20, 50);
+    text("STATUS: GATOR CERTIFIED", 20, 70);
+    
+    textAlign(RIGHT);
+    text("FRAZZLE: 1.0 (ROAD SYNC)", width-20, 30);
+    text("AURORA PROTOCOL: ACTIVE", width-20, 50);
+}
+
+function mousePressed() {
+    if(mouseY < 100) secretColors = !secretColors; // Toggle at top
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+</script>
+</body>
+</html>
