@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRi1 UNIVERSAL CONSOLE: BANSHEE v3.0.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        canvas { border: 2px solid #333; box-shadow: 0 0 20px rgba(128, 0, 128, 0.5); }
+    </style>
+</head>
+<body>
+<script>
+/**
+ * CRi1 UNIVERSAL CONSOLE v3.0.0 - BANSHEE
+ * THE SALISBURY LAB BUILD
+ * Features: Mirrored Inward Satellites, 100% Road Frazzle, ALEZU Bit-Shift
+ */
+
+let pistons = [];
+let frazzle = 1.0; 
+let secretMode = false;
+let osc, noise, ping;
+let shake = 1.0;
+let ghostTrace = [];
+
+// ALEZU CHR-ROM Palettes
+const PAL_MATTE = [15, 15, 15]; // Charcoal
+const PAL_CHROME = [255, 0, 255]; // Fae Reveal Violet
+const PAL_GLITCH = [0, 255, 0]; // Neon Green
+
+function setup() {
+    createCanvas(400, 400);
+    userStartAudio();
+
+    // Sound Hardware Init
+    osc = new p5.Oscillator('triangle'); osc.amp(0); osc.start();
+    noise = new p5.Noise('brown'); noise.amp(0); noise.start();
+    ping = new p5.Oscillator('sine'); ping.amp(0); ping.start();
+
+    initSymmetricLayout();
+}
+
+function initSymmetricLayout() {
+    pistons = [];
+    let yRow = 200;
+    // LEFT PAD (Inward Satellite)
+    pistons.push({x: 50,  y: yRow, size: 50, type: 'BIG', note: 220, rot: 0});
+    pistons.push({x: 100, y: yRow, size: 50, type: 'BIG', note: 247, rot: 0});
+    pistons.push({x: 150, y: yRow, size: 50, type: 'BIG', note: 277, rot: 0});
+    pistons.push({x: 190, y: yRow + 10, size: 15, type: 'LITTLE', note: 440, rot: 0}); // THE OPEN
+
+    // RIGHT PAD (Inward Satellite Mirror)
+    pistons.push({x: 210, y: yRow + 10, size: 15, type: 'LITTLE', note: 440, rot: 0}); // THE OPEN
+    pistons.push({x: 250, y: yRow, size: 50, type: 'BIG', note: 277, rot: 0});
+    pistons.push({x: 300, y: yRow, size: 50, type: 'BIG', note: 330, rot: 0});
+    pistons.push({x: 350, y: yRow, size: 50, type: 'BIG', note: 370, rot: 0});
+}
+
+function draw() {
+    // 100% Road Rattle (IMG_5132 Sync)
+    let rx = random(-shake, shake);
+    let ry = random(-shake, shake);
+    translate(rx, ry);
+
+    background(10, 5, 20); // The Purple Box
+
+    renderGhostTrace();
+    renderPistons();
+    renderAlezu(200, 320);
+    
+    // HUD Info
+    fill(255, 100);
+    textSize(10);
+    textAlign(CENTER);
+    text("BANSHEE v3.0.0 | SALISBURY LAB | FRAZZLE: 100%", 200, 385);
+}
+
+function renderPistons() {
+    pistons.forEach(p => {
+        let d = dist(mouseX, mouseY, p.x, p.y);
+        let isPressed = mouseIsPressed && d < p.size/2;
+
+        if (isPressed) {
+            // Secret Color Reveal
+            fill(secretMode ? PAL_CHROME : PAL_GLITCH);
+            p.rot += 0.2;
+            triggerSound(p.note, p.type);
+            ghostTrace.push({x: p.x, y: p.y, life: 255});
+        } else {
+            fill(40); // Matte Charcoal
+        }
+
+        stroke(secretMode ? 200 : 80);
+        push();
+        translate(p.x, p.y);
+        rotate(p.rot);
+        if(p.type === 'BIG') {
+            rectMode(CENTER);
+            rect(0, 0, p.size, p.size, 5);
+        } else {
+            ellipse(0, 0, p.size, p.size);
+        }
+        pop();
+    });
+}
+
+function renderAlezu(x, y) {
+    // 4-Frame "Flippy Guy" Animation Logic
+    let frame = floor(frameCount / 15) % 4; 
+    // 0:Idle, 1:Mirror, 2:Frazzle, 3:Chrome
+    
+    push();
+    translate(x, y);
+    noStroke();
+    
+    // Simple 8-bit Block Representation of ALEZU
+    fill(frame === 3 ? PAL_CHROME : PAL_GLITCH);
+    
+    if (frame === 1) scale(-1, 1); // Horizontal Flip
+    if (frame === 2) translate(random(-5, 5), random(-5, 5)); // Road Rattle
+    
+    rect(0, 0, 40, 20); // Tail/Body
+    rect(15, -15, 25, 15); // Head
+    fill(255);
+    rect(30, -10, 4, 4); // Eye
+    pop();
+}
+
+function renderGhostTrace() {
+    for (let i = ghostTrace.length - 1; i >= 0; i--) {
+        let g = ghostTrace[i];
+        stroke(secretMode ? 255 : 0, 255, 255, g.life);
+        noFill();
+        ellipse(g.x, g.y, (255 - g.life) / 2);
+        g.life -= 5;
+        if (g.life <= 0) ghostTrace.splice(i, 1);
+    }
+}
+
+function triggerSound(freq, type) {
+    if (type === 'BIG') {
+        osc.freq(freq);
+        osc.amp(0.2, 0.05);
+        osc.amp(0, 0.5);
+    } else {
+        ping.freq(freq * 2);
+        ping.amp(0.4, 0.01);
+        ping.amp(0, 0.2);
+    }
+}
+
+function mousePressed() {
+    if (getAudioContext().state !== 'running') getAudioContext().resume();
+    // Toggle Secret Color Mode on Triple Click logic placeholder
+    if (mouseY > 350) secretMode = !secretMode; 
+}
+</script>
+</body>
+</html>
