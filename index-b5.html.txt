@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRUMPET GARDEN v1.10.0: TINYGUY COMMAND</title>
+    <style>
+        :root { --p: #9d00ff; --o: #FF4500; --g: #0f0; --y: #ffcc00; --gry: #888; --cyan: #00FFFF; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
+        .fae { filter: invert(1) hue-rotate(180deg); background: #fff !important; }
+        
+        /* UI OVERLAY */
+        #ui { position: absolute; inset: 0; z-index: 100; pointer-events: none; }
+        #header { width: 100%; height: 110px; background: rgba(20,20,20,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 2px solid #333; pointer-events: auto; }
+        .h-row { display: flex; align-items: flex-start; justify-content: center; gap: 8px; width: 98%; }
+        .btn { background: #111; border: 2px solid var(--p); color: #fff; padding: 10px 4px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-align: center; width: 100%; }
+        
+        /* SLIDERS & HAMMERS */
+        .sld { position: absolute; width: 50px; height: 260px; background: #111; border: 2px solid #555; border-radius: 25px; top: 150px; pointer-events: auto; z-index: 300; }
+        #l-s { left: 4%; } #r-s { right: 4%; }
+        .fill { width: 100%; position: absolute; bottom: 0; background: linear-gradient(to top, var(--cyan), #fff); border-radius: 25px; pointer-events: none; }
+        .ham { position: absolute; bottom: 40px; padding: 15px 20px; font-size: 12px; border: 2px solid var(--cyan); color: var(--cyan); background: #000; border-radius: 8px; cursor: pointer; z-index: 500; pointer-events: auto; font-weight: bold; }
+        
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; pointer-events: auto; }
+        #diag { position: fixed; top: 115px; width: 100%; text-align: center; font-size: 10px; color: var(--cyan); letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div id="header">
+        <div class="h-row">
+            <button id="instBtn" class="btn" style="border-color:var(--cyan)" onclick="toggleTrumpet()">🎹KBD_STATE</button>
+            <button class="btn" onclick="location.reload()">RELOAD_BIOS</button>
+            <button class="btn" style="border-color:red" onclick="killAll()">KILL_ALL</button>
+        </div>
+        <div style="color:var(--cyan); font-size: 14px; margin-top: 10px; font-weight: bold;">ALEZU FORGE v3.3.0</div>
+    </div>
+    <div id="diag">PROTOCOL: AURORA_NEXUS | IDENTIFIER: TGfred000003</div>
+
+    <button class="ham" style="left: 10%;" onpointerdown="hamSlam(0.94)">HAM L-</button>
+    <button class="ham" style="right: 10%;" onpointerdown="hamSlam(1.06)">HAM R+</button>
+
+    <div id="l-s" class="sld" onpointerdown="slide(event,'l')" onpointermove="slide(event,'l')">
+        <div id="l-f" class="fill" style="height:50%"></div>
+    </div>
+    <div id="r-s" class="sld" onpointerdown="slide(event,'r')" onpointermove="slide(event,'r')">
+        <div id="r-f" class="fill" style="height:50%"></div>
+    </div>
+</div>
+
+<canvas id="mainCanvas"></canvas>
+
+<script>
+const bridge = new BroadcastChannel('tinyguy_bridge');
+let aCtx, isTrumpet = false, frazzle = 1.0, currentPitch = 1.0;
+const oscs = new Map(), pointers = new Map();
+const canvas = document.getElementById('mainCanvas'), ctx = canvas.getContext('2d');
+
+// THE 18-BUCKET PHASE MAP
+const buckets = [164.81, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00];
+
+function toggleTrumpet() {
+    isTrumpet = !isTrumpet;
+    document.getElementById('instBtn').innerText = isTrumpet ? "🎺TRP_MODE" : "🎹KBD_STATE";
+    killAll();
+}
+
+function hamSlam(mult) {
+    currentPitch *= mult;
+    frazzle = 8.0; // TRIGGER ROAD RATTLE
+    bridge.postMessage({
+        header: { protocol: "AURORA_NEXUS", source: "FORGE_MASTER" },
+        payload: { action: "HAMMER_SLAM", params: { frequency: 528 * currentPitch, intensity: frazzle } }
+    });
+}
+
+function slide(e, s) {
+    if (e.buttons !== 1 && e.type !== 'pointerdown') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const val = Math.max(0, Math.min(1, (1 - (e.clientY - r.top) / r.height)));
+    document.getElementById(s + '-f').style.height = (val * 100) + "%";
+    if (val > 0.9) document.body.classList.add('fae');
+    else if (val < 0.1) document.body.classList.remove('fae');
+}
+
+function handleDown(e) {
+    if (e.target.closest('#ui') || e.target.closest('.sld')) return;
+    if (!aCtx) aCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    let cX = window.innerWidth / 2, cY = window.innerHeight / 2;
+    let idx = Math.floor(Math.random() * 9); // Placeholder for grid logic
+    
+    const g = aCtx.createGain();
+    const o = aCtx.createOscillator();
+    o.type = isTrumpet ? 'sawtooth' : 'triangle';
+    o.frequency.setValueAtTime(buckets[idx] * currentPitch, aCtx.currentTime);
+    g.gain.setTargetAtTime(0.2, aCtx.currentTime, 0.05);
+    
+    o.connect(g); o.start(); g.connect(aCtx.destination);
+    oscs.set(e.pointerId, {o, g, x: e.clientX, y: e.clientY});
+}
+
+function handleUp(e) {
+    if (oscs.has(e.pointerId)) {
+        let v = oscs.get(e.pointerId);
+        v.g.gain.setTargetAtTime(0, aCtx.currentTime, 0.05);
+        setTimeout(() => { v.o.stop(); oscs.delete(e.pointerId); }, 100);
+    }
+}
+
+function killAll() { oscs.forEach(v => v.o.stop()); oscs.clear(); }
+
+function animate() {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    
+    // THE FRAZZLE SHAKE
+    let sX = (Math.random() - 0.5) * frazzle;
+    let sY = (Math.random() - 0.5) * frazzle;
+    ctx.save();
+    ctx.translate(sX, sY);
+
+    // DRAW KINEMATIC GRID
+    ctx.strokeStyle = "#00FFFF";
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#00FFFF";
+    
+    oscs.forEach((v, id) => {
+        // Tension Strings
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(canvas.width/2, canvas.height);
+        ctx.lineTo(v.x, v.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Active Node
+        ctx.beginPath();
+        ctx.arc(v.x, v.y, 40, 0, Math.PI*2);
+        ctx.stroke();
+    });
+
+    ctx.restore();
+    if (frazzle > 1.0) frazzle *= 0.95; // Rattle decay
+    requestAnimationFrame(animate);
+}
+
+canvas.addEventListener('pointerdown', handleDown);
+canvas.addEventListener('pointerup', handleUp);
+animate();
+</script>
+</body>
+</html>
+
