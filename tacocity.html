@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TACO CITY BOARD OF TOURISM - TERMINAL</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #00ff41;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #terminal {
+            width: 80%;
+            max-width: 800px;
+            height: 400px;
+            border: 2px solid #003300;
+            padding: 20px;
+            background: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            position: relative;
+            z-index: 5;
+            overflow-y: auto;
+        }
+
+        .input-line { display: flex; align-items: center; }
+        input {
+            background: transparent;
+            border: none;
+            color: #00ff41;
+            font-family: inherit;
+            font-size: 1.2rem;
+            outline: none;
+            width: 100%;
+        }
+
+        #canvas-container {
+            display: none;
+            position: relative;
+        }
+
+        canvas {
+            border: 4px solid #333;
+            image-rendering: pixelated; /* Keeps the 8-bit look sharp */
+            background: #000;
+        }
+
+        .slime-glitch { color: #d000ff; text-shadow: 2px 2px #5500ff; }
+    </style>
+</head>
+<body>
+
+    <div id="terminal">
+        <div id="output">
+            TACO CITY BOARD OF TOURISM - SYSTEM v4.02<br>
+            CONNECTED VIA MAINFRAME_GATE_08...<br><br>
+            PLEASE ENTER ACCESS CODE (START / START -NOINTRO):<br>
+        </div>
+        <div class="input-line">
+            <span>>&nbsp;</span><input type="text" id="commandInput" autofocus>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="gameCanvas" width="512" height="448"></canvas>
+    </div>
+
+    <script>
+        const input = document.getElementById('commandInput');
+        const output = document.getElementById('output');
+        const term = document.getElementById('terminal');
+        const canvasContainer = document.getElementById('canvas-container');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = input.value.toLowerCase().trim();
+                handleCommand(cmd);
+                input.value = '';
+            }
+        });
+
+        function handleCommand(cmd) {
+            if (cmd === 'start') {
+                startIntro();
+            } else if (cmd === 'start -nointro') {
+                skipToIntro();
+            } else {
+                output.innerHTML += `<div>>> ERROR: UNKNOWN KEYWORD '${cmd}'</div>`;
+            }
+        }
+
+        function startIntro() {
+            term.style.display = 'none';
+            canvasContainer.style.display = 'block';
+            runCinematic();
+        }
+
+        function skipToIntro() {
+            term.style.display = 'none';
+            canvasContainer.style.display = 'block';
+            drawFrame("READY BUILD LOADED", "#00ff41");
+        }
+
+        async function runCinematic() {
+            // Sequence 1: Glitch
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+            
+            const lines = ["MAINFRAME ENTANGLEMENT", "SLIMEY MOTHER DETECTED", "TELEPORTING..."];
+            for(let line of lines) {
+                drawFrame(line, "#d000ff");
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            // Sequence 2: Title Zoom
+            let size = 10;
+            const titleInterval = setInterval(() => {
+                ctx.fillStyle = "black";
+                ctx.fillRect(0,0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = "white";
+                ctx.font = `${size}px monospace`;
+                ctx.textAlign = "center";
+                ctx.fillText("TACO CITY RAMPAGE", canvas.width/2, canvas.height/2);
+                
+                size += 5;
+                if (size > 60) {
+                    clearInterval(titleInterval);
+                    drawFinalTitle();
+                }
+            }, 50);
+        }
+
+        function drawFrame(text, color) {
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillStyle = color;
+            ctx.font = "20px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(text, canvas.width/2, canvas.height/2);
+        }
+
+        function drawFinalTitle() {
+            ctx.fillStyle = "#0055ff"; // Walmart Blue Zone
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+            
+            ctx.fillStyle = "#ffcc00"; // Taco Yellow
+            ctx.font = "40px monospace";
+            ctx.fillText("TACO CITY", canvas.width/2, canvas.height/2 - 20);
+            
+            ctx.fillStyle = "#d000ff"; // Slime Purple
+            ctx.font = "50px monospace";
+            ctx.fillText("RAMPAGE", canvas.width/2, canvas.height/2 + 40);
+        }
+    </script>
+</body>
+</html>
