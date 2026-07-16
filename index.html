@@ -8,27 +8,27 @@
         * { box-sizing: border-box; }
         body { margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* Staff Area: Top Padding added for Ledger Lines, fixed 5-line limit */
+        /* 5 lines, 4 equal segments. 
+           Padding-top provides the "2 segments length" gap at the top.
+        */
         #staff-area { 
-            width: 90%; height: 180px; margin-top: 40px; 
+            width: 90%; height: 150px; margin-top: 60px; 
             border-left: 3px solid #000; border-right: 3px solid #000; 
-            border-top: 2px solid #000; border-bottom: 2px solid #000;
-            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
-            background-position: 0 30px; position: relative;
+            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 35px);
+            background-position: 0 0; position: relative;
         }
         #note-head { 
-            position: absolute; left: 45%; font-size: 25px; transition: top 0.1s; transform: translate(-50%, -50%);
+            position: absolute; left: 45%; font-size: 25px; 
+            transition: top 0.1s; transform: translate(-50%, -50%);
         }
 
-        /* Controls Section */
-        #controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0; }
+        #controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0; }
         #clef-label { font-size: 24px; font-weight: bold; }
         #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
         #note-label { font-size: 20px; font-weight: bold; text-align: center; }
         button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
 
-        /* Keyboard */
-        #keyboard { display: flex; width: 100%; height: 80px; border-top: 2px solid #000; }
+        #keyboard { display: flex; width: 100%; height: 80px; border-top: 3px solid #000; }
         .key { flex: 1; border: 1px solid #000; }
         .black { background: #000; width: 2%; z-index: 10; }
         .white { background: #fff; }
@@ -53,7 +53,7 @@
     <div id="keyboard"></div>
 
     <script>
-        let pitch = 57; // Start at A3
+        let pitch = 57; 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         
         const kb = document.getElementById('keyboard');
@@ -68,14 +68,13 @@
             const color = chakraColors[pitch % 7];
             const name = noteNames[pitch % 12] + (Math.floor(pitch / 12) - 1);
             
-            const label = document.getElementById('note-label');
-            label.textContent = name;
-            label.style.color = color;
+            document.getElementById('note-label').textContent = name;
+            document.getElementById('note-label').style.color = color;
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // 75px is the center of the staff area
-            head.style.top = (75 - (pitch - 60) * 15) + 'px';
+            // 70px is the vertical anchor for the middle of the staff lines
+            head.style.top = (70 - (pitch - 60) * 17.5) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
                 el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
