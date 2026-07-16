@@ -11,18 +11,17 @@
             overflow: hidden; font-family: sans-serif; touch-action: none; 
         }
         
-        /* Forced Absolute Positioning with !important to override any cached layouts */
+        /* Staff Area: 
+           - 'top: 40px' ensures no unnecessary extra top padding.
+           - Borders removed to eliminate micro-lines.
+        */
         #staff-canvas { 
             position: absolute !important; 
-            top: 100px !important; 
+            top: 40px !important; 
             left: 5% !important; 
             width: 90% !important; 
-            height: 140px !important; 
-            border-left: 3px solid #000; 
-            border-right: 3px solid #000; 
-            border-top: 2px solid #000; 
-            border-bottom: 2px solid #000;
-            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 33px);
+            height: 120px !important; 
+            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
             background-position: 0 0; 
         }
         #note-head { 
@@ -31,7 +30,7 @@
         }
 
         #controls { 
-            position: absolute; top: 280px; width: 100%; display: flex; 
+            position: absolute; top: 200px; width: 100%; display: flex; 
             align-items: center; justify-content: center; gap: 15px; 
         }
         #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
@@ -86,8 +85,8 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // 65px centers the note head on the lines inside the 140px staff area
-            head.style.top = (65 - (pitch - 60) * 16.5) + 'px';
+            // 30px anchor for the lines
+            head.style.top = (30 - (pitch - 60) * 15) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
                 el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
