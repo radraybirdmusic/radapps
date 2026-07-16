@@ -3,69 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRi1 Music Staff</title>
+    <title>CRi1 Piano Learner</title>
     <style>
         * { box-sizing: border-box; }
-        body { 
-            margin: 0; height: 100vh; display: flex; flex-direction: column; 
-            align-items: center; justify-content: space-between; 
-            font-family: sans-serif; touch-action: none; overflow: hidden;
-            background: #ffffff;
-        }
+        body { margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; background: #fff; overflow: hidden; }
         
-        #staff-container { 
-            position: relative; width: 90%; height: 300px;
-            margin-top: 20px; border-left: 4px solid #333; border-right: 4px solid #333;
-            /* Lines spaced at 30px */
-            background-image: linear-gradient(to bottom, #333 2px, transparent 2px);
-            background-size: 100% 30px;
-            /* Shifted background position down to center the staff */
-            background-position: 0 90px;
-        }
-        
-        #clef-display { position: absolute; left: 10px; top: 105px; font-size: 50px; font-weight: bold; }
-        #note-display { 
-            position: absolute; left: 45%; font-size: 35px; font-weight: bold; 
-            transition: top 0.1s; background: white; padding: 0 5px; 
-            /* Align text so the middle of the note sits on the line */
-            transform: translateY(-50%); 
-        }
-        
-        #d-pad { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; padding-bottom: 40px; }
-        button { height: 70px; font-size: 16px; border-radius: 10px; border: 2px solid #333; background: #eee; }
+        /* Staff Area */
+        #staff-container { width: 100%; height: 150px; background-image: linear-gradient(to bottom, #333 2px, transparent 2px); background-size: 100% 30px; background-position: 0 30px; border-bottom: 2px solid #333; position: relative; }
+        #note-display { position: absolute; font-size: 30px; font-weight: bold; transition: top 0.1s; left: 50%; }
+
+        /* Controls */
+        #controls { display: flex; align-items: center; gap: 20px; margin: 10px 0; }
+        #clef-indicator { font-size: 40px; font-weight: bold; width: 50px; text-align: center; }
+        #d-pad { display: grid; grid-template-columns: repeat(3, 60px); gap: 5px; }
+        button { height: 60px; border-radius: 8px; border: 1px solid #333; }
+
+        /* Keyboard Area */
+        #keyboard { display: flex; width: 100%; height: 120px; overflow-x: auto; border-top: 2px solid #333; }
+        .key { flex: 1; border: 1px solid #000; }
+        .white { background: white; }
+        .black { background: black; width: 30px; margin-left: -15px; margin-right: -15px; z-index: 2; }
     </style>
 </head>
 <body>
 
     <div id="staff-container">
-        <div id="clef-display">T</div>
         <div id="note-display">C4</div>
     </div>
 
-    <div id="d-pad">
-        <div></div><button data-dir="up">UP</button><div></div>
-        <button data-dir="left">LEFT</button><div></div><button data-dir="right">RIGHT</button>
-        <div></div><button data-dir="down">DOWN</button><div></div>
+    <div id="controls">
+        <div id="clef-indicator">T</div>
+        <div id="d-pad">
+            <div></div><button data-dir="up">^</button><div></div>
+            <button data-dir="left"><</button><div></div><button data-dir="right">></button>
+            <div></div><button data-dir="down">v</button><div></div>
+        </div>
+        <div id="clef-indicator">B</div>
     </div>
 
+    <div id="keyboard" id="keys-container"></div>
+
     <script>
-        let pitch = 60; 
+        let pitch = 60; // Start at Middle C
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
+        
+        // Generate 49 keys
+        const keyboard = document.getElementById('keyboard');
+        for(let i = 0; i < 49; i++) {
+            const key = document.createElement('div');
+            key.className = 'key ' + ([1,3,6,8,10].includes(i % 12) ? 'black' : 'white');
+            key.id = `key-${i}`;
+            keyboard.appendChild(key);
+        }
 
         function update() {
-            const clefEl = document.getElementById('clef-display');
+            // Logic: Middle C (60) is the pivot
+            // Treble is 60+, Bass is below 60
+            document.querySelectorAll('#clef-indicator')[0].style.opacity = (pitch >= 60) ? 1 : 0.2; // Treble
+            document.querySelectorAll('#clef-indicator')[1].style.opacity = (pitch < 60) ? 1 : 0.2; // Bass
+            
             const noteEl = document.getElementById('note-display');
-            
-            clefEl.textContent = (pitch < 60) ? 'B' : 'T';
-            
-            const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-            noteEl.textContent = `${noteNames[pitch % 12]}${Math.floor(pitch / 12) - 1}`;
             noteEl.style.color = chakraColors[pitch % 7];
+            noteEl.style.top = (120 - (pitch - 60) * 10) + 'px';
             
-            // Centered initial position (105px aligns with the staff)
-            // Each pitch change moves the note by 15px (half the line gap)
-            const topPos = 105 - ((pitch - 60) * 15);
-            noteEl.style.top = `${topPos}px`;
+            // Highlight active key
+            document.querySelectorAll('.key').forEach(k => k.style.borderColor = 'black');
+            document.getElementById(`key-${pitch - 36}`).style.borderColor = 'red';
         }
 
         document.querySelectorAll('button').forEach(btn => {
@@ -76,7 +79,6 @@
                 update();
             });
         });
-
         update();
     </script>
 </body>
