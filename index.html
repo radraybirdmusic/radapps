@@ -8,17 +8,20 @@
         * { box-sizing: border-box; }
         body { margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* 5-line Staff Area */
-        #staff-area { width: 90%; height: 200px; margin-top: 20px; border-left: 3px solid #000; border-right: 3px solid #000; 
+        /* 5-line Staff Area - Locked height */
+        #staff-area { width: 90%; height: 160px; margin-top: 20px; border-left: 3px solid #000; border-right: 3px solid #000; 
             background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
-            background-position: 0 40px; border-bottom: 2px solid #000; position: relative; }
-        #note-head { position: absolute; left: 45%; font-size: 30px; font-weight: bold; transition: top 0.1s; }
+            background-position: 0 20px; border-bottom: 2px solid #000; position: relative; }
+        
+        /* Note placement: fixed circle */
+        #note-head { position: absolute; left: 45%; font-size: 20px; transition: top 0.1s; }
 
-        /* Controls Section */
-        #controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0; }
-        #clef-label { font-size: 24px; font-weight: bold; }
+        /* Controls Section - Perfectly Centered */
+        #controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; }
+        #clef-label { font-size: 24px; font-weight: bold; width: 30px; text-align: center; }
+        #d-pad-container { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        #note-label { font-size: 22px; font-weight: bold; }
         #d-pad { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; }
-        #note-label { font-size: 20px; font-weight: bold; color: #333; }
         button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
 
         /* Keyboard */
@@ -36,10 +39,12 @@
 
     <div id="controls">
         <div id="clef-label">B</div>
-        <div id="d-pad">
-            <div></div><button data-dir="up">^</button><div></div>
-            <button data-dir="left"><</button><div id="note-label">C4</div><button data-dir="right">></button>
-            <div></div><button data-dir="down">v</button><div></div>
+        <div id="d-pad-container">
+            <div id="d-pad">
+                <div></div><button data-dir="up">^</button><div></div>
+                <button data-dir="left"><</button><div id="note-label">A3</div><button data-dir="right">></button>
+                <div></div><button data-dir="down">v</button><div></div>
+            </div>
         </div>
         <div id="clef-label">T</div>
     </div>
@@ -47,10 +52,9 @@
     <div id="keyboard"></div>
 
     <script>
-        let pitch = 60; 
+        let pitch = 57; // A3
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         
-        // Draw 49 keys
         const kb = document.getElementById('keyboard');
         for(let i = 0; i < 49; i++) {
             let k = document.createElement('div');
@@ -61,16 +65,23 @@
 
         function update() {
             const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+            const color = chakraColors[pitch % 7];
             const name = noteNames[pitch % 12] + (Math.floor(pitch / 12) - 1);
             
-            document.getElementById('note-label').textContent = name;
-            const head = document.getElementById('note-head');
-            head.textContent = (pitch >= 60) ? '●' : '●'; // Could change to quarter/half note shapes later
-            head.style.color = chakraColors[pitch % 7];
-            head.style.top = (100 - (pitch - 60) * 15) + 'px';
+            // Sync Label
+            const label = document.getElementById('note-label');
+            label.textContent = name;
+            label.style.color = color;
             
+            // Sync Note Head
+            const head = document.getElementById('note-head');
+            head.style.color = color;
+            // Snap logic: (pitch offset * 15px) ensures it hits lines/spaces correctly
+            head.style.top = (110 - (pitch - 60) * 15) + 'px';
+            
+            // Sync Keyboard
             document.querySelectorAll('.key').forEach((el, idx) => {
-                el.style.background = (idx === (pitch - 36)) ? chakraColors[pitch % 7] : (el.classList.contains('black') ? 'black' : 'white');
+                el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
             });
         }
 
