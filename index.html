@@ -8,17 +8,22 @@
         * { box-sizing: border-box; }
         body { margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* 5 lines, 4 equal segments. 
-           Padding-top provides the "2 segments length" gap at the top.
+        /* Fixed height of 140px:
+           - Top 70px (2 segments) reserved as top margin.
+           - Remaining height for the 5 lines.
         */
         #staff-area { 
-            width: 90%; height: 150px; margin-top: 60px; 
+            width: 90%; height: 160px; margin-top: 40px; 
             border-left: 3px solid #000; border-right: 3px solid #000; 
-            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 35px);
-            background-position: 0 0; position: relative;
+            padding-top: 70px;
+            /* 5 lines: gradient creates 4 gaps of 20px */
+            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 20px);
+            background-size: 100% 82px;
+            background-position: 0 70px;
+            position: relative;
         }
         #note-head { 
-            position: absolute; left: 45%; font-size: 25px; 
+            position: absolute; left: 45%; font-size: 20px; 
             transition: top 0.1s; transform: translate(-50%, -50%);
         }
 
@@ -73,8 +78,8 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // 70px is the vertical anchor for the middle of the staff lines
-            head.style.top = (70 - (pitch - 60) * 17.5) + 'px';
+            // 80px is the vertical offset for the staff
+            head.style.top = (80 - (pitch - 60) * 10) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
                 el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
