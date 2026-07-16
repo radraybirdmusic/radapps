@@ -6,56 +6,39 @@
     <title>CRi1 Music Learner</title>
     <style>
         * { box-sizing: border-box; }
-        body { 
-            margin: 0; padding: 0; height: 100vh; background: #fff; 
-            overflow: hidden; font-family: sans-serif; touch-action: none; 
-        }
+        body { margin: 0; padding: 0; height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* Staff: 5 lines, 4 segments. 30px gap per segment */
+        /* 5 Lines only, no extra border lines */
         #staff-canvas { 
-            position: absolute !important; 
-            top: 40px !important; 
-            left: 5% !important; 
-            width: 90% !important; 
-            height: 122px !important; 
+            position: absolute !important; top: 40px !important; left: 5% !important; 
+            width: 90% !important; height: 120px !important; 
             background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
             background-position: 0 0; 
         }
         #note-head { 
-            position: absolute; left: 45%; font-size: 25px; transition: top 0.1s; 
+            position: absolute; left: 45%; font-size: 20px; transition: top 0.1s; 
             transform: translate(-50%, -50%);
         }
 
-        #controls { 
-            position: absolute; top: 220px; width: 100%; display: flex; 
-            align-items: center; justify-content: center; gap: 15px; 
-        }
-        #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
-        #note-label { font-size: 20px; font-weight: bold; text-align: center; }
-        button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
+        #controls { position: absolute; top: 200px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        button { height: 50px; width: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
+        #note-label { font-size: 20px; font-weight: bold; width: 60px; text-align: center; }
 
-        #keyboard { 
-            position: absolute; bottom: 0; width: 100%; height: 80px; 
-            border-top: 3px solid #000; display: flex; 
-        }
-        .key { flex: 1; border: 1px solid #000; }
-        .black { background: #000; width: 2%; z-index: 10; }
-        .white { background: #fff; }
+        #keyboard { position: absolute; bottom: 0; width: 100%; height: 80px; display: flex; }
+        .key { flex: 1; border: 1px solid #000; background: #fff; }
     </style>
 </head>
 <body>
 
-    <div id="staff-canvas">
-        <div id="note-head">●</div>
-    </div>
+    <div id="staff-canvas"><div id="note-head">●</div></div>
 
     <div id="controls">
         <div style="font-weight:bold; font-size: 24px;">B</div>
-        <div id="d-pad-layout">
-            <div></div><button data-dir="up">^</button><div></div>
-            <button data-dir="left"><</button><div id="note-label">C4</div><button data-dir="right">></button>
-            <div></div><button data-dir="down">v</button><div></div>
-        </div>
+        <button data-dir="up">^</button>
+        <button data-dir="left"><</button>
+        <div id="note-label">C4</div>
+        <button data-dir="right">></button>
+        <button data-dir="down">v</button>
         <div style="font-weight:bold; font-size: 24px;">T</div>
     </div>
 
@@ -64,40 +47,40 @@
     <script>
         // Start pitch at Middle C (60)
         let pitch = 60; 
+        const whiteKeys = [60, 62, 64, 65, 67, 69, 71, 72]; // C4 to C5
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         
         const kb = document.getElementById('keyboard');
-        for(let i = 0; i < 49; i++) {
+        for(let i = 0; i < 29; i++) { // 29 white keys for 4 octaves
             let k = document.createElement('div');
-            k.className = 'key ' + ([1,3,6,8,10].includes(i % 12) ? 'black' : 'white');
+            k.className = 'key';
+            k.id = 'k-' + i;
             kb.appendChild(k);
         }
 
         function update() {
-            const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+            const noteNames = ["C", "D", "E", "F", "G", "A", "B"];
             const color = chakraColors[pitch % 7];
-            const name = noteNames[pitch % 12] + (Math.floor(pitch / 12) - 1);
+            const name = noteNames[pitch % 7] + (Math.floor(pitch / 12) - 1);
             
             document.getElementById('note-label').textContent = name;
             document.getElementById('note-label').style.color = color;
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            
-            // Logic: 120px is the anchor for Middle C on the bottom line.
-            // Each pitch step moves the note 15px (half the 30px line gap).
+            // 30px anchor aligns Middle C correctly
             head.style.top = (120 - (pitch - 60) * 15) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
-                el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
+                el.style.backgroundColor = (idx === (pitch - 48)) ? color : '#fff';
             });
         }
 
         document.querySelectorAll('button').forEach(b => {
             b.addEventListener('pointerdown', (e) => {
                 const dir = e.target.dataset.dir;
-                if(dir === 'up') pitch++;
-                if(dir === 'down') pitch--;
+                if(dir === 'up') pitch = Math.min(pitch + 2, 84); // Simple white key step
+                if(dir === 'down') pitch = Math.max(pitch - 2, 48);
                 update();
             });
         });
