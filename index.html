@@ -8,11 +8,11 @@
         * { box-sizing: border-box; }
         body { margin: 0; height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* 5-line staff with 30px gaps. Top gap of 80px created by top: 80px */
+        /* Staff Area: Exactly 5 lines drawn */
         #staff-canvas { 
-            position: absolute !important; top: 80px !important; left: 5% !important; 
+            position: absolute !important; top: 100px !important; left: 5% !important; 
             width: 90% !important; height: 120px !important; 
-            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
+            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 28px);
             background-position: 0 0; 
         }
         #note-head { 
@@ -21,11 +21,12 @@
         }
 
         /* Controls Layout */
-        #controls { position: absolute; top: 250px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        #controls { position: absolute; top: 260px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 15px; }
         #d-pad { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; }
         #note-label { font-size: 20px; font-weight: bold; text-align: center; }
         button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
 
+        /* Keyboard */
         #keyboard { position: absolute; bottom: 0; width: 100%; height: 80px; display: flex; border-top: 3px solid #000; }
         .key { flex: 1; border: 1px solid #000; background: #fff; }
     </style>
@@ -47,12 +48,13 @@
     <div id="keyboard"></div>
 
     <script>
-        // Start at C4 (60). 
+        // C4 = 60. Using C major scale for white keys.
         let pitch = 60; 
+        const whiteKeys = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84]; 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         
         const kb = document.getElementById('keyboard');
-        for(let i = 0; i < 29; i++) {
+        for(let i = 0; i < 15; i++) {
             let k = document.createElement('div');
             k.className = 'key';
             kb.appendChild(k);
@@ -68,19 +70,21 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // Direction reversed: higher pitch = lower top value (moving UP the screen)
-            head.style.top = (120 - (pitch - 60) * 15) + 'px';
+            // Anchor Middle C (60) to the ledger space below the staff (115px)
+            // 14px step corresponds to the space between lines.
+            head.style.top = (115 - (whiteKeys.indexOf(pitch)) * 14) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
-                el.style.backgroundColor = (idx === (pitch - 60)) ? color : '#fff';
+                el.style.backgroundColor = (idx === whiteKeys.indexOf(pitch)) ? color : '#fff';
             });
         }
 
         document.querySelectorAll('button').forEach(b => {
             b.addEventListener('pointerdown', (e) => {
                 const dir = e.target.dataset.dir;
-                if(dir === 'up') pitch++;
-                if(dir === 'down') pitch--;
+                let currentIndex = whiteKeys.indexOf(pitch);
+                if(dir === 'up') pitch = whiteKeys[Math.min(currentIndex + 1, whiteKeys.length - 1)];
+                if(dir === 'down') pitch = whiteKeys[Math.max(currentIndex - 1, 0)];
                 update();
             });
         });
