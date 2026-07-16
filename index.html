@@ -6,32 +6,38 @@
     <title>CRi1 Music Learner</title>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
+        body { 
+            margin: 0; padding: 0; height: 100vh; background: #fff; 
+            overflow: hidden; font-family: sans-serif; touch-action: none; 
+        }
         
-        /* Absolute Positioning: Forces the staff to be 100px from the absolute top */
-        #staff-area { 
-            position: absolute; top: 100px; left: 5%; width: 90%; height: 140px; 
-            border-left: 3px solid #000; border-right: 3px solid #000; 
-            border-top: 2px solid #000; border-bottom: 2px solid #000;
+        /* Forced Absolute Positioning with !important to override any cached layouts */
+        #staff-canvas { 
+            position: absolute !important; 
+            top: 100px !important; 
+            left: 5% !important; 
+            width: 90% !important; 
+            height: 140px !important; 
+            border-left: 3px solid #000; 
+            border-right: 3px solid #000; 
+            border-top: 2px solid #000; 
+            border-bottom: 2px solid #000;
             background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 33px);
-            background-position: 0 0;
+            background-position: 0 0; 
         }
         #note-head { 
             position: absolute; left: 45%; font-size: 20px; transition: top 0.1s; 
             transform: translate(-50%, -50%);
         }
 
-        /* Controls Section: Positioned below the staff area */
         #controls { 
             position: absolute; top: 280px; width: 100%; display: flex; 
             align-items: center; justify-content: center; gap: 15px; 
         }
-        #clef-label { font-size: 24px; font-weight: bold; }
         #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
         #note-label { font-size: 20px; font-weight: bold; text-align: center; }
         button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
 
-        /* Keyboard: Anchored to absolute bottom */
         #keyboard { 
             position: absolute; bottom: 0; width: 100%; height: 80px; 
             border-top: 3px solid #000; display: flex; 
@@ -43,18 +49,18 @@
 </head>
 <body>
 
-    <div id="staff-area">
+    <div id="staff-canvas">
         <div id="note-head">●</div>
     </div>
 
     <div id="controls">
-        <div id="clef-label">B</div>
+        <div style="font-weight:bold; font-size: 24px;">B</div>
         <div id="d-pad-layout">
             <div></div><button data-dir="up">^</button><div></div>
             <button data-dir="left"><</button><div id="note-label">A3</div><button data-dir="right">></button>
             <div></div><button data-dir="down">v</button><div></div>
         </div>
-        <div id="clef-label">T</div>
+        <div style="font-weight:bold; font-size: 24px;">T</div>
     </div>
 
     <div id="keyboard"></div>
@@ -80,7 +86,7 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // 65px centers the note head on the lines inside the 140px staff
+            // 65px centers the note head on the lines inside the 140px staff area
             head.style.top = (65 - (pitch - 60) * 16.5) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
