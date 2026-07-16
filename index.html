@@ -10,14 +10,18 @@
             margin: 0; height: 100vh; display: flex; flex-direction: column; 
             align-items: center; justify-content: space-between; 
             font-family: sans-serif; touch-action: none; overflow: hidden;
-            background: #f0f0f0;
+            background: #fdfdfd;
         }
-        #display-area { 
-            flex: 1; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; 
+        /* Staff Lines Styling */
+        #staff-box { 
+            position: relative; width: 80%; height: 200px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 40px 0; border-left: 2px solid #333; border-right: 2px solid #333;
         }
-        #clef { font-size: 80px; font-weight: bold; color: #333; }
-        #note-label { font-size: 60px; margin-top: 10px; font-weight: bold; }
+        .line { height: 2px; background: #333; width: 100%; }
+        
+        #clef-display { position: absolute; left: 10px; top: 70px; font-size: 60px; font-weight: bold; }
+        #note-display { position: absolute; left: 40%; font-size: 50px; font-weight: bold; transition: all 0.1s; }
         
         #d-pad { 
             display: grid; grid-template-columns: repeat(3, 80px); 
@@ -25,15 +29,16 @@
         }
         button { 
             height: 80px; font-size: 16px; border-radius: 12px; 
-            border: 2px solid #ccc; background: #fff; touch-action: manipulation;
+            border: 2px solid #ccc; background: #fff; 
         }
     </style>
 </head>
 <body>
 
-    <div id="display-area">
-        <div id="clef">T</div>
-        <div id="note-label">C4</div>
+    <div id="staff-box">
+        <div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div>
+        <div id="clef-display">T</div>
+        <div id="note-display">C4</div>
     </div>
 
     <div id="d-pad">
@@ -47,17 +52,23 @@
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
 
         function update() {
-            const clefEl = document.getElementById('clef');
-            const noteEl = document.getElementById('note-label');
+            const clefEl = document.getElementById('clef-display');
+            const noteEl = document.getElementById('note-display');
             
+            // Logic: Switch Clef
             clefEl.textContent = (pitch < 60) ? 'B' : 'T';
             
+            // Logic: Name
             const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-            const name = noteNames[pitch % 12];
-            const octave = Math.floor(pitch / 12) - 1;
+            noteEl.textContent = `${noteNames[pitch % 12]}${Math.floor(pitch / 12) - 1}`;
             
-            noteEl.textContent = `${name}${octave}`;
+            // Logic: Color
             noteEl.style.color = chakraColors[pitch % 7];
+            
+            // Logic: Vertical Position (Move the note up/down based on pitch)
+            // We adjust the top margin based on the pitch
+            const offset = (72 - pitch) * 8; 
+            noteEl.style.top = `${offset}px`;
         }
 
         document.querySelectorAll('button').forEach(btn => {
