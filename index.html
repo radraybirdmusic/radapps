@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CRi1 Music Learner</title>
+    <style>
+        body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; touch-action: none; }
+        #display-area { height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #clef { font-size: 100px; font-weight: bold; }
+        #note-label { font-size: 40px; margin-top: 20px; }
+        #d-pad { display: grid; grid-template-columns: 100px 100px 100px; gap: 10px; }
+        button { height: 80px; font-size: 20px; border-radius: 10px; border: none; background: #ddd; }
+    </style>
+</head>
+<body>
+
+    <div id="display-area">
+        <div id="clef">T</div>
+        <div id="note-label">C4</div>
+    </div>
+
+    <div id="d-pad">
+        <div></div><button data-dir="up">UP</button><div></div>
+        <button data-dir="left">LEFT</button><div></div><button data-dir="right">RIGHT</button>
+        <div></div><button data-dir="down">DOWN</button><div></div>
+    </div>
+
+    <script>
+        let pitch = 60; // Middle C
+        let duration = 2; // Index for note length
+        
+        const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
+
+        function update() {
+            const clefEl = document.getElementById('clef');
+            const noteEl = document.getElementById('note-label');
+            
+            // Logic: Middle C is 60. Below 60 is Bass (B), 60+ is Treble (T)
+            clefEl.textContent = (pitch < 60) ? 'B' : 'T';
+            
+            const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+            const name = noteNames[pitch % 12];
+            const octave = Math.floor(pitch / 12) - 1;
+            
+            noteEl.textContent = `${name}${octave}`;
+            noteEl.style.color = chakraColors[pitch % 7];
+        }
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('pointerdown', (e) => {
+                const dir = e.target.dataset.dir;
+                if(dir === 'up') pitch++;
+                if(dir === 'down') pitch--;
+                if(dir === 'right') duration++;
+                if(dir === 'left' && duration > 0) duration--;
+                update();
+            });
+        });
+
+        update();
+    </script>
+</body>
+</html>
