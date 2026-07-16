@@ -8,16 +8,17 @@
         * { box-sizing: border-box; }
         body { 
             margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; 
-            background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none;
-            /* Force the top buffer area */
-            padding-top: 80px; 
+            background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; 
         }
         
+        /* The Buffer: This is the empty space at the very top */
+        #top-buffer { height: 80px; width: 100%; }
+
+        /* The Staff: Exactly 5 lines, 4 segments */
         #staff-area { 
             width: 90%; height: 140px; 
             border-left: 3px solid #000; border-right: 3px solid #000; 
             border-top: 2px solid #000; border-bottom: 2px solid #000;
-            /* 5 lines total, 4 segments of 35px each */
             background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 33px);
             background-position: 0 0; position: relative;
         }
@@ -26,12 +27,14 @@
             transform: translate(-50%, -50%);
         }
 
-        #controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0; }
+        /* Controls Section */
+        #controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: auto; margin-bottom: auto; }
         #clef-label { font-size: 24px; font-weight: bold; }
         #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
         #note-label { font-size: 20px; font-weight: bold; text-align: center; }
         button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
 
+        /* Keyboard: Anchored at the bottom */
         #keyboard { display: flex; width: 100%; height: 80px; border-top: 3px solid #000; margin-top: auto; }
         .key { flex: 1; border: 1px solid #000; }
         .black { background: #000; width: 2%; z-index: 10; }
@@ -39,6 +42,8 @@
     </style>
 </head>
 <body>
+
+    <div id="top-buffer"></div>
 
     <div id="staff-area">
         <div id="note-head">●</div>
@@ -77,7 +82,6 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // Precise alignment: staff is 140px, middle is 70px.
             head.style.top = (70 - (pitch - 60) * 16.5) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
