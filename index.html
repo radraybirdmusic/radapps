@@ -6,26 +6,38 @@
     <title>CRi1 Music Learner</title>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
+        body { 
+            margin: 0; padding: 0; height: 100vh; background: #fff; 
+            overflow: hidden; font-family: sans-serif; touch-action: none; 
+        }
         
+        /* Staff: 5 lines, 4 segments. 30px gap per segment */
         #staff-canvas { 
-            position: absolute !important; top: 40px !important; left: 5% !important; 
-            width: 90% !important; height: 150px !important; 
-            /* 5 lines, 30px gap */
+            position: absolute !important; 
+            top: 40px !important; 
+            left: 5% !important; 
+            width: 90% !important; 
+            height: 122px !important; 
             background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
             background-position: 0 0; 
         }
         #note-head { 
-            position: absolute; left: 45%; font-size: 20px; transition: top 0.1s; 
+            position: absolute; left: 45%; font-size: 25px; transition: top 0.1s; 
             transform: translate(-50%, -50%);
         }
 
-        #controls { position: absolute; top: 220px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        #controls { 
+            position: absolute; top: 220px; width: 100%; display: flex; 
+            align-items: center; justify-content: center; gap: 15px; 
+        }
         #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
         #note-label { font-size: 20px; font-weight: bold; text-align: center; }
         button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
 
-        #keyboard { position: absolute; bottom: 0; width: 100%; height: 80px; border-top: 3px solid #000; display: flex; }
+        #keyboard { 
+            position: absolute; bottom: 0; width: 100%; height: 80px; 
+            border-top: 3px solid #000; display: flex; 
+        }
         .key { flex: 1; border: 1px solid #000; }
         .black { background: #000; width: 2%; z-index: 10; }
         .white { background: #fff; }
@@ -41,7 +53,7 @@
         <div style="font-weight:bold; font-size: 24px;">B</div>
         <div id="d-pad-layout">
             <div></div><button data-dir="up">^</button><div></div>
-            <button data-dir="left"><</button><div id="note-label">A3</div><button data-dir="right">></button>
+            <button data-dir="left"><</button><div id="note-label">C4</div><button data-dir="right">></button>
             <div></div><button data-dir="down">v</button><div></div>
         </div>
         <div style="font-weight:bold; font-size: 24px;">T</div>
@@ -50,7 +62,8 @@
     <div id="keyboard"></div>
 
     <script>
-        let pitch = 57; 
+        // Start pitch at Middle C (60)
+        let pitch = 60; 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         
         const kb = document.getElementById('keyboard');
@@ -71,10 +84,9 @@
             const head = document.getElementById('note-head');
             head.style.color = color;
             
-            // The staff starts at top: 0 inside the canvas.
-            // Each pitch step must move exactly 15px (half the 30px line gap).
-            // We anchor C4 (60) to a line.
-            head.style.top = (120 - (pitch - 52) * 15) + 'px';
+            // Logic: 120px is the anchor for Middle C on the bottom line.
+            // Each pitch step moves the note 15px (half the 30px line gap).
+            head.style.top = (120 - (pitch - 60) * 15) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
                 el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
