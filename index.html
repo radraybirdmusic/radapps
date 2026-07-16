@@ -11,17 +11,17 @@
             overflow: hidden; font-family: sans-serif; touch-action: none; 
         }
         
-        /* Staff Area: 
-           - 'top: 40px' ensures no unnecessary extra top padding.
-           - Borders removed to eliminate micro-lines.
+        /* Staff Area:
+           - 5 lines are drawn by the repeating gradient.
+           - top: 40px keeps it consistent with your preferred spacing.
         */
         #staff-canvas { 
             position: absolute !important; 
             top: 40px !important; 
             left: 5% !important; 
             width: 90% !important; 
-            height: 120px !important; 
-            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
+            height: 125px !important; 
+            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 28px);
             background-position: 0 0; 
         }
         #note-head { 
@@ -85,8 +85,8 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // 30px anchor for the lines
-            head.style.top = (30 - (pitch - 60) * 15) + 'px';
+            // 30px offset centers the note head correctly within the 5-line staff
+            head.style.top = (30 - (pitch - 60) * 14.5) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
                 el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
