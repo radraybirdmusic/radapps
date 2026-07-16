@@ -14,23 +14,22 @@
         }
         
         #staff-container { 
-            position: relative; width: 90%; height: 250px;
-            margin-top: 50px; border-left: 4px solid #333; border-right: 4px solid #333;
-            /* Create the 5 lines using CSS repeating linear gradient */
-            background-image: 
-                linear-gradient(to bottom, #333 2px, transparent 2px);
-            background-size: 100% 50px;
-            background-position: 0 25px;
+            position: relative; width: 90%; height: 200px;
+            margin-top: 60px; border-left: 4px solid #333; border-right: 4px solid #333;
+            /* Reduced gap from 50px to 30px to fit ledger lines */
+            background-image: linear-gradient(to bottom, #333 2px, transparent 2px);
+            background-size: 100% 30px;
+            background-position: 0 40px;
         }
         
-        #clef-display { position: absolute; left: 10px; top: 85px; font-size: 60px; font-weight: bold; }
+        #clef-display { position: absolute; left: 10px; top: 55px; font-size: 50px; font-weight: bold; }
         #note-display { 
-            position: absolute; left: 40%; font-size: 40px; font-weight: bold; 
+            position: absolute; left: 45%; font-size: 35px; font-weight: bold; 
             transition: top 0.1s; background: white; padding: 0 5px; 
         }
         
-        #d-pad { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; padding-bottom: 30px; }
-        button { height: 70px; font-size: 18px; border-radius: 10px; border: 2px solid #333; background: #eee; }
+        #d-pad { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; padding-bottom: 40px; }
+        button { height: 70px; font-size: 16px; border-radius: 10px; border: 2px solid #333; background: #eee; }
     </style>
 </head>
 <body>
@@ -60,9 +59,8 @@
             noteEl.textContent = `${noteNames[pitch % 12]}${Math.floor(pitch / 12) - 1}`;
             noteEl.style.color = chakraColors[pitch % 7];
             
-            // Map pitch to vertical position (invert so higher pitch = higher on screen)
-            // 200px is the height, adjusted by pitch
-            const topPos = 200 - ((pitch - 48) * 10);
+            // Adjusted mapping: tighter scaling factor (15px per step) to fit the staff
+            const topPos = 140 - ((pitch - 60) * 15);
             noteEl.style.top = `${topPos}px`;
         }
 
