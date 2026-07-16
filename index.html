@@ -6,22 +6,13 @@
     <title>CRi1 Music Learner</title>
     <style>
         * { box-sizing: border-box; }
-        body { 
-            margin: 0; padding: 0; height: 100vh; background: #fff; 
-            overflow: hidden; font-family: sans-serif; touch-action: none; 
-        }
+        body { margin: 0; height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* Staff Area:
-           - 5 lines are drawn by the repeating gradient.
-           - top: 40px keeps it consistent with your preferred spacing.
-        */
         #staff-canvas { 
-            position: absolute !important; 
-            top: 40px !important; 
-            left: 5% !important; 
-            width: 90% !important; 
-            height: 125px !important; 
-            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 28px);
+            position: absolute !important; top: 40px !important; left: 5% !important; 
+            width: 90% !important; height: 150px !important; 
+            /* 5 lines, 30px gap */
+            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
             background-position: 0 0; 
         }
         #note-head { 
@@ -29,18 +20,12 @@
             transform: translate(-50%, -50%);
         }
 
-        #controls { 
-            position: absolute; top: 200px; width: 100%; display: flex; 
-            align-items: center; justify-content: center; gap: 15px; 
-        }
+        #controls { position: absolute; top: 220px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 15px; }
         #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
         #note-label { font-size: 20px; font-weight: bold; text-align: center; }
         button { height: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
 
-        #keyboard { 
-            position: absolute; bottom: 0; width: 100%; height: 80px; 
-            border-top: 3px solid #000; display: flex; 
-        }
+        #keyboard { position: absolute; bottom: 0; width: 100%; height: 80px; border-top: 3px solid #000; display: flex; }
         .key { flex: 1; border: 1px solid #000; }
         .black { background: #000; width: 2%; z-index: 10; }
         .white { background: #fff; }
@@ -85,8 +70,11 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // 30px offset centers the note head correctly within the 5-line staff
-            head.style.top = (30 - (pitch - 60) * 14.5) + 'px';
+            
+            // The staff starts at top: 0 inside the canvas.
+            // Each pitch step must move exactly 15px (half the 30px line gap).
+            // We anchor C4 (60) to a line.
+            head.style.top = (120 - (pitch - 52) * 15) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
                 el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
