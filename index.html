@@ -3,40 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRi1 Music Learner</title>
+    <title>CRi1 Music Staff</title>
     <style>
         * { box-sizing: border-box; }
         body { 
             margin: 0; height: 100vh; display: flex; flex-direction: column; 
             align-items: center; justify-content: space-between; 
             font-family: sans-serif; touch-action: none; overflow: hidden;
-            background: #fdfdfd;
+            background: #ffffff;
         }
-        /* Staff Lines Styling */
-        #staff-box { 
-            position: relative; width: 80%; height: 200px;
-            display: flex; flex-direction: column; justify-content: space-between;
-            padding: 40px 0; border-left: 2px solid #333; border-right: 2px solid #333;
-        }
-        .line { height: 2px; background: #333; width: 100%; }
         
-        #clef-display { position: absolute; left: 10px; top: 70px; font-size: 60px; font-weight: bold; }
-        #note-display { position: absolute; left: 40%; font-size: 50px; font-weight: bold; transition: all 0.1s; }
+        #staff-container { 
+            position: relative; width: 90%; height: 250px;
+            margin-top: 50px; border-left: 4px solid #333; border-right: 4px solid #333;
+            /* Create the 5 lines using CSS repeating linear gradient */
+            background-image: 
+                linear-gradient(to bottom, #333 2px, transparent 2px);
+            background-size: 100% 50px;
+            background-position: 0 25px;
+        }
         
-        #d-pad { 
-            display: grid; grid-template-columns: repeat(3, 80px); 
-            gap: 10px; padding-bottom: 20px; 
+        #clef-display { position: absolute; left: 10px; top: 85px; font-size: 60px; font-weight: bold; }
+        #note-display { 
+            position: absolute; left: 40%; font-size: 40px; font-weight: bold; 
+            transition: top 0.1s; background: white; padding: 0 5px; 
         }
-        button { 
-            height: 80px; font-size: 16px; border-radius: 12px; 
-            border: 2px solid #ccc; background: #fff; 
-        }
+        
+        #d-pad { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; padding-bottom: 30px; }
+        button { height: 70px; font-size: 18px; border-radius: 10px; border: 2px solid #333; background: #eee; }
     </style>
 </head>
 <body>
 
-    <div id="staff-box">
-        <div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div>
+    <div id="staff-container">
         <div id="clef-display">T</div>
         <div id="note-display">C4</div>
     </div>
@@ -55,20 +54,16 @@
             const clefEl = document.getElementById('clef-display');
             const noteEl = document.getElementById('note-display');
             
-            // Logic: Switch Clef
             clefEl.textContent = (pitch < 60) ? 'B' : 'T';
             
-            // Logic: Name
             const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
             noteEl.textContent = `${noteNames[pitch % 12]}${Math.floor(pitch / 12) - 1}`;
-            
-            // Logic: Color
             noteEl.style.color = chakraColors[pitch % 7];
             
-            // Logic: Vertical Position (Move the note up/down based on pitch)
-            // We adjust the top margin based on the pitch
-            const offset = (72 - pitch) * 8; 
-            noteEl.style.top = `${offset}px`;
+            // Map pitch to vertical position (invert so higher pitch = higher on screen)
+            // 200px is the height, adjusted by pitch
+            const topPos = 200 - ((pitch - 48) * 10);
+            noteEl.style.top = `${topPos}px`;
         }
 
         document.querySelectorAll('button').forEach(btn => {
