@@ -6,28 +6,28 @@
     <title>CRi1 Music Learner</title>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; }
+        body { 
+            margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; 
+            background: #fff; overflow: hidden; font-family: sans-serif; touch-action: none; 
+        }
         
-        /* Fixed height of 140px:
-           - Top 70px (2 segments) reserved as top margin.
-           - Remaining height for the 5 lines.
+        /* STAFF AREA: 
+           - 'margin-top' creates the 2-segment gap from the top of the display.
+           - 'border-top' and 'border-bottom' define the scale boundaries.
         */
         #staff-area { 
-            width: 90%; height: 160px; margin-top: 40px; 
+            width: 90%; height: 140px; margin-top: 70px; 
             border-left: 3px solid #000; border-right: 3px solid #000; 
-            padding-top: 70px;
-            /* 5 lines: gradient creates 4 gaps of 20px */
-            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 20px);
-            background-size: 100% 82px;
-            background-position: 0 70px;
-            position: relative;
+            border-top: 2px solid #000; border-bottom: 2px solid #000;
+            background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 33px);
+            background-position: 0 0; position: relative;
         }
         #note-head { 
-            position: absolute; left: 45%; font-size: 20px; 
-            transition: top 0.1s; transform: translate(-50%, -50%);
+            position: absolute; left: 45%; font-size: 20px; transition: top 0.1s; 
+            transform: translate(-50%, -50%);
         }
 
-        #controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0; }
+        #controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0; }
         #clef-label { font-size: 24px; font-weight: bold; }
         #d-pad-layout { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; align-items: center; }
         #note-label { font-size: 20px; font-weight: bold; text-align: center; }
@@ -78,8 +78,8 @@
             
             const head = document.getElementById('note-head');
             head.style.color = color;
-            // 80px is the vertical offset for the staff
-            head.style.top = (80 - (pitch - 60) * 10) + 'px';
+            // 65px centers the note head on the lines
+            head.style.top = (65 - (pitch - 60) * 16.5) + 'px';
             
             document.querySelectorAll('.key').forEach((el, idx) => {
                 el.style.backgroundColor = (idx === (pitch - 36)) ? color : (el.classList.contains('black') ? 'black' : 'white');
