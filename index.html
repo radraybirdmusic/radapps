@@ -6,9 +6,14 @@
     <title>CRi1 Music Learner</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        /* padding-top creates the permanent buffer at the top of the screen */
-        body { height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 60px; }
+        body { height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
         
+        /* Absolute gap at the top */
+        #top-gap { height: 60px; width: 100%; }
+
+        /* 
+           - Staff lines: 5 lines, 30px spacing.
+        */
         #staff-canvas { 
             width: 90%; height: 122px; 
             background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px);
@@ -24,6 +29,7 @@
 </head>
 <body>
 
+    <div id="top-gap"></div>
     <div id="staff-canvas"><div id="note-head">●</div></div>
 
     <div id="controls">
@@ -39,10 +45,14 @@
     </div>
 
     <script>
+        // Mapping based on your specific requirements:
+        // C4 = One line distance below bottom staff line
+        // D4 = Half line distance below bottom staff line
+        // E4 = On the first (bottom) line
         const scale = [
-            {name: "C4", top: 120}, {name: "D4", top: 105}, {name: "E4", top: 90}, {name: "F4", top: 75}, 
-            {name: "G4", top: 60}, {name: "A4", top: 45}, {name: "B4", top: 30}, {name: "C5", top: 15}, 
-            {name: "D5", top: 0}, {name: "E5", top: -15}, {name: "F5", top: -30}, {name: "G5", top: -45}, {name: "A5", top: -60}
+            {name: "C4", top: 150}, {name: "D4", top: 135}, {name: "E4", top: 120}, {name: "F4", top: 105}, 
+            {name: "G4", top: 90}, {name: "A4", top: 75}, {name: "B4", top: 60}, {name: "C5", top: 45}, 
+            {name: "D5", top: 30}, {name: "E5", top: 15}, {name: "F5", top: 0}, {name: "G5", top: -15}, {name: "A5", top: -30}
         ];
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         let idx = 0; 
