@@ -66,6 +66,11 @@
         let idx = 0; 
 
         function playTone(freq) {
+            // Resume context if suspended by browser policy
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
