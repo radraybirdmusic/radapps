@@ -10,7 +10,7 @@
         
         #audio-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.95); z-index: 100; display: flex; 
+            background: #fff; z-index: 100; display: flex; 
             justify-content: center; align-items: center; 
         }
 
@@ -33,7 +33,7 @@
 </head>
 <body>
 
-    <div id="audio-overlay"><button id="start-btn" style="width: 150px; height: 50px; font-size: 18px;">Start Audio</button></div>
+    <div id="audio-overlay"><button id="start-btn" style="width: 150px; height: 50px; font-size: 18px;">Start App</button></div>
     <div id="top-gap"></div>
     <div id="staff-canvas"><div id="note-head">●</div></div>
 
@@ -67,30 +67,27 @@
         ];
 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
-        let audioCtx = null;
         
-        document.getElementById('start-btn').addEventListener('click', async () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            await audioCtx.resume();
+        document.getElementById('start-btn').addEventListener('click', () => {
             document.getElementById('audio-overlay').style.display = 'none';
         });
 
-        let mode = "treble";
-        let idx = 0; 
-
+        // Use standard Audio API with synthetic tone generation
         function playTone(freq) {
-            if (!audioCtx) return;
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.frequency.value = freq;
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
+            osc.stop(audioCtx.currentTime + 0.2);
         }
+        
+        let mode = "treble";
+        let idx = 0; 
         
         function update(playSound = false) {
             const scale = (mode === "treble") ? trebleScale : bassScale;
