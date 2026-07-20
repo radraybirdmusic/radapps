@@ -8,6 +8,13 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
         
+        /* Audio overlay to unlock sound */
+        #audio-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.9); z-index: 100; display: flex; 
+            justify-content: center; align-items: center; 
+        }
+
         #top-gap { height: 60px; width: 100%; }
         #staff-canvas { 
             width: 90%; height: 122px; 
@@ -27,6 +34,7 @@
 </head>
 <body>
 
+    <div id="audio-overlay"><button id="start-btn" style="width: 150px; font-size: 18px;">Start Audio</button></div>
     <div id="top-gap"></div>
     <div id="staff-canvas"><div id="note-head">●</div></div>
 
@@ -60,17 +68,18 @@
         ];
 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx;
         
+        document.getElementById('start-btn').addEventListener('click', () => {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            document.getElementById('audio-overlay').style.display = 'none';
+        });
+
         let mode = "treble";
         let idx = 0; 
 
         function playTone(freq) {
-            // Resume context if suspended by browser policy
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            
+            if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
