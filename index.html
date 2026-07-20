@@ -82,9 +82,13 @@
                         if (idx === 0) { mode = "bass"; idx = 0; }
                         else idx = Math.max(idx - 1, 0);
                     }
-                } else { // Bass Mode: Up moves to higher pitch (index - 1), Down moves to lower pitch (index + 1)
-                    if (dir === 'up') idx = Math.max(idx - 1, 0);
-                    else if (dir === 'down') idx = Math.min(idx + 1, bassScale.length - 1);
+                } else { // Bass Mode
+                    if (dir === 'up') {
+                        if (idx === 0) { mode = "treble"; idx = 0; }
+                        else idx = Math.max(idx - 1, 0);
+                    } else if (dir === 'down') {
+                        idx = Math.min(idx + 1, bassScale.length - 1);
+                    }
                 }
                 update();
             });
