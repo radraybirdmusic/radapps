@@ -8,10 +8,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { height: 100vh; background: #fff; overflow: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
         
-        /* Audio overlay to unlock sound */
         #audio-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.9); z-index: 100; display: flex; 
+            background: rgba(255,255,255,0.95); z-index: 100; display: flex; 
             justify-content: center; align-items: center; 
         }
 
@@ -34,7 +33,7 @@
 </head>
 <body>
 
-    <div id="audio-overlay"><button id="start-btn" style="width: 150px; font-size: 18px;">Start Audio</button></div>
+    <div id="audio-overlay"><button id="start-btn" style="width: 150px; height: 50px; font-size: 18px;">Start Audio</button></div>
     <div id="top-gap"></div>
     <div id="staff-canvas"><div id="note-head">●</div></div>
 
@@ -68,10 +67,11 @@
         ];
 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
-        let audioCtx;
+        let audioCtx = null;
         
-        document.getElementById('start-btn').addEventListener('click', () => {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            await audioCtx.resume();
             document.getElementById('audio-overlay').style.display = 'none';
         });
 
@@ -110,14 +110,13 @@
         document.querySelectorAll('button').forEach(b => {
             b.addEventListener('pointerdown', (e) => {
                 const dir = e.target.dataset.dir;
-                
                 if (mode === "treble") {
                     if (dir === 'up') idx = Math.min(idx + 1, trebleScale.length - 1);
                     else if (dir === 'down') {
                         if (idx === 0) { mode = "bass"; idx = 0; }
                         else idx = Math.max(idx - 1, 0);
                     }
-                } else { // Bass Mode
+                } else {
                     if (dir === 'up') {
                         if (idx === 0) { mode = "treble"; idx = 0; }
                         else idx = Math.max(idx - 1, 0);
