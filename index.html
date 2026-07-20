@@ -44,22 +44,41 @@
 
     <script>
         const trebleScale = [
-            {name: "C4", top: 150}, {name: "D4", top: 135}, {name: "E4", top: 120}, {name: "F4", top: 105}, 
-            {name: "G4", top: 90}, {name: "A4", top: 75}, {name: "B4", top: 60}, {name: "C5", top: 45}, 
-            {name: "D5", top: 30}, {name: "E5", top: 15}, {name: "F5", top: 0}, {name: "G5", top: -15}, {name: "A5", top: -30}
+            {name: "C4", top: 150, freq: 261.63}, {name: "D4", top: 135, freq: 293.66}, {name: "E4", top: 120, freq: 329.63}, 
+            {name: "F4", top: 105, freq: 349.23}, {name: "G4", top: 90, freq: 392.00}, {name: "A4", top: 75, freq: 440.00}, 
+            {name: "B4", top: 60, freq: 493.88}, {name: "C5", top: 45, freq: 523.25}, {name: "D5", top: 30, freq: 587.33}, 
+            {name: "E5", top: 15, freq: 659.25}, {name: "F5", top: 0, freq: 698.46}, {name: "G5", top: -15, freq: 783.99}, 
+            {name: "A5", top: -30, freq: 880.00}
         ];
         
         const bassScale = [
-            {name: "C4", top: -30}, {name: "B3", top: -15}, {name: "A3", top: 0}, {name: "G3", top: 15}, 
-            {name: "F3", top: 30}, {name: "E3", top: 45}, {name: "D3", top: 60}, {name: "C3", top: 75}, 
-            {name: "B2", top: 90}, {name: "A2", top: 105}, {name: "G2", top: 120}, {name: "F2", top: 135}, {name: "E2", top: 150}
+            {name: "C4", top: -30, freq: 261.63}, {name: "B3", top: -15, freq: 246.94}, {name: "A3", top: 0, freq: 220.00}, 
+            {name: "G3", top: 15, freq: 196.00}, {name: "F3", top: 30, freq: 174.61}, {name: "E3", top: 45, freq: 164.81}, 
+            {name: "D3", top: 60, freq: 146.83}, {name: "C3", top: 75, freq: 130.81}, {name: "B2", top: 90, freq: 123.47}, 
+            {name: "A2", top: 105, freq: 110.00}, {name: "G2", top: 120, freq: 98.00}, {name: "F2", top: 135, freq: 87.31}, 
+            {name: "E2", top: 150, freq: 82.41}
         ];
 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
         let mode = "treble";
         let idx = 0; 
+
+        function playTone(freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
         
-        function update() {
+        function update(playSound = false) {
             const scale = (mode === "treble") ? trebleScale : bassScale;
             const label = document.getElementById('note-label');
             label.textContent = scale[idx].name;
@@ -70,6 +89,8 @@
             
             document.getElementById('clef-t').className = (mode === "treble") ? "clef-lit" : "clef-unlit";
             document.getElementById('clef-b').className = (mode === "bass") ? "clef-lit" : "clef-unlit";
+            
+            if (playSound) playTone(scale[idx].freq);
         }
 
         document.querySelectorAll('button').forEach(b => {
@@ -90,7 +111,7 @@
                         idx = Math.min(idx + 1, bassScale.length - 1);
                     }
                 }
-                update();
+                update(true);
             });
         });
         update();
