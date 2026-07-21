@@ -13,13 +13,13 @@
         #staff-canvas { width: 90%; height: 122px; background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px); position: relative; }
         #note-head { position: absolute; left: 45%; font-size: 25px; transition: top 0.1s; transform: translate(-50%, -50%); }
         #controls { margin-top: 40px; display: flex; align-items: center; gap: 15px; }
-        #d-pad { display: grid; grid-template-columns: 50px 50px 50px; gap: 5px; align-items: center; justify-items: center; position: relative; }
+        #d-pad { display: grid; grid-template-columns: 50px 50px 50px; gap: 5px; align-items: center; justify-items: center; position: relative; background: #222; padding: 5px; border-radius: 12px; }
         
-        /* Solfège label positioned to the left of the Up button and above the Left button */
+        /* Solfège label: Left of Up button, above Left button */
         #solfege-label {
             position: absolute;
-            top: 0px;
-            left: 0px;
+            top: 5px;
+            left: 5px;
             width: 50px;
             height: 50px;
             display: flex;
@@ -29,8 +29,21 @@
             font-weight: bold;
         }
 
+        /* Note Length indicator: Right of Up button, above Right button */
+        #duration-display {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
         .label-container { width: 50px; text-align: center; font-size: 20px; font-weight: bold; }
-        button { height: 50px; width: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
+        button { height: 50px; width: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; cursor: pointer; }
         .clef-lit { font-weight: bold; font-size: 24px; color: #000; }
         .clef-unlit { font-weight: bold; font-size: 24px; color: #ccc; }
     </style>
@@ -45,6 +58,10 @@
         <div id="clef-b" class="clef-unlit">B</div>
         <div id="d-pad">
             <div id="solfege-label">Do</div>
+            <div id="duration-display">
+                <!-- Canvas draws the note duration icon cleanly in white -->
+                <canvas id="duration-canvas" width="30" height="30"></canvas>
+            </div>
             <div></div><button data-dir="up">^</button><div></div>
             <button data-dir="left"><</button>
             <div id="note-label" class="label-container">C4</div>
@@ -60,19 +77,19 @@
         };
 
         const trebleScale = [
-            {name: "C4", top: 150, freq: 261.63}, {name: "D4", top: 135, freq: 293.66}, {name: "E4", top: 120, freq: 329.63}, 
-            {name: "F4", top: 105, freq: 349.23}, {name: "G4", top: 90, freq: 392.00}, {name: "A4", top: 75, freq: 440.00}, 
-            {name: "B4", top: 60, freq: 493.88}, {name: "C5", top: 45, freq: 523.25}, {name: "D5", top: 30, freq: 587.33}, 
-            {name: "E5", top: 15, freq: 659.25}, {name: "F5", top: 0, freq: 698.46}, {name: "G5", top: -15, freq: 783.99}, 
-            {name: "A5", top: -30, freq: 880.00}
+            {name: "C4", top: 150, freq: 261.63, duration: 0.2}, {name: "D4", top: 135, freq: 293.66, duration: 0.2}, {name: "E4", top: 120, freq: 329.63, duration: 0.3}, 
+            {name: "F4", top: 105, freq: 349.23, duration: 0.3}, {name: "G4", top: 90, freq: 392.00, duration: 0.4}, {name: "A4", top: 75, freq: 440.00, duration: 0.4}, 
+            {name: "B4", top: 60, freq: 493.88, duration: 0.5}, {name: "C5", top: 45, freq: 523.25, duration: 0.6}, {name: "D5", top: 30, freq: 587.33, duration: 0.7}, 
+            {name: "E5", top: 15, freq: 659.25, duration: 0.8}, {name: "F5", top: 0, freq: 698.46, duration: 1.0}, {name: "G5", top: -15, freq: 783.99, duration: 1.2}, 
+            {name: "A5", top: -30, freq: 880.00, duration: 1.5}
         ];
         
         const bassScale = [
-            {name: "C4", top: -30, freq: 261.63}, {name: "B3", top: -15, freq: 246.94}, {name: "A3", top: 0, freq: 220.00}, 
-            {name: "G3", top: 15, freq: 196.00}, {name: "F3", top: 30, freq: 174.61}, {name: "E3", top: 45, freq: 164.81}, 
-            {name: "D3", top: 60, freq: 146.83}, {name: "C3", top: 75, freq: 130.81}, {name: "B2", top: 90, freq: 123.47}, 
-            {name: "A2", top: 105, freq: 110.00}, {name: "G2", top: 120, freq: 98.00}, {name: "F2", top: 135, freq: 87.31}, 
-            {name: "E2", top: 150, freq: 82.41}
+            {name: "C4", top: -30, freq: 261.63, duration: 1.5}, {name: "B3", top: -15, freq: 246.94, duration: 1.2}, {name: "A3", top: 0, freq: 220.00, duration: 1.0}, 
+            {name: "G3", top: 15, freq: 196.00, duration: 0.8}, {name: "F3", top: 30, freq: 174.61, duration: 0.7}, {name: "E3", top: 45, freq: 164.81, duration: 0.6}, 
+            {name: "D3", top: 60, freq: 146.83, duration: 0.5}, {name: "C3", top: 75, freq: 130.81, duration: 0.4}, {name: "B2", top: 90, freq: 123.47, duration: 0.4}, 
+            {name: "A2", top: 105, freq: 110.00, duration: 0.3}, {name: "G2", top: 120, freq: 98.00, duration: 0.3}, {name: "F2", top: 135, freq: 87.31, duration: 0.2}, 
+            {name: "E2", top: 150, freq: 82.41, duration: 0.2}
         ];
 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
@@ -84,17 +101,53 @@
             document.getElementById('audio-overlay').style.display = 'none';
         });
 
-        function playTone(freq) {
+        function playTone(freq, duration) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.frequency.value = freq;
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.2);
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // Draw note shape onto canvas (White styling like clefs)
+        function drawNoteIcon(duration) {
+            const canvas = document.getElementById('duration-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+
+            // Simple visual distinction mapping based on duration length
+            if (duration >= 1.0) {
+                // Whole note (open circle ring)
+                ctx.beginPath();
+                ctx.ellipse(15, 20, 6, 4, -0.3, 0, Math.PI * 2);
+                ctx.stroke();
+            } else if (duration >= 0.5) {
+                // Half note (open circle with stem)
+                ctx.beginPath();
+                ctx.ellipse(12, 20, 5, 3.5, -0.3, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(16, 20);
+                ctx.lineTo(16, 8);
+                ctx.stroke();
+            } else {
+                // Quarter note / shorter (filled note head with stem)
+                ctx.beginPath();
+                ctx.ellipse(12, 20, 5, 3.5, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(16, 20);
+                ctx.lineTo(16, 8);
+                ctx.stroke();
+            }
         }
         
         let mode = "treble";
@@ -123,8 +176,11 @@
             // Update Clefs
             document.getElementById('clef-t').className = (mode === "treble") ? "clef-lit" : "clef-unlit";
             document.getElementById('clef-b').className = (mode === "bass") ? "clef-lit" : "clef-unlit";
+
+            // Draw Duration Icon
+            drawNoteIcon(currentNote.duration);
             
-            if (playSound) playTone(currentNote.freq);
+            if (playSound) playTone(currentNote.freq, currentNote.duration);
         }
 
         document.querySelectorAll('button').forEach(b => {
