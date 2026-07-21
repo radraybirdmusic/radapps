@@ -15,7 +15,6 @@
         #controls { margin-top: 40px; display: flex; align-items: center; gap: 15px; }
         #d-pad { display: grid; grid-template-columns: 50px 50px 50px; gap: 5px; align-items: center; justify-items: center; position: relative; }
         
-        /* Solfège label: Left of Up button, above Left button */
         #solfege-label {
             position: absolute;
             top: 0px;
@@ -29,7 +28,6 @@
             font-weight: bold;
         }
 
-        /* Note Length indicator: Right of Up button, above Right button */
         #duration-display {
             position: absolute;
             top: 0px;
@@ -93,38 +91,29 @@
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         let audioCtx;
         
-        document.getElementById('start-btn').addEventListener('click', async () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') {
-                await audioCtx.resume();
-            }
+        // Exact original unblocked audio context creation
+        document.getElementById('start-btn').addEventListener('click', () => {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtx.resume();
             document.getElementById('audio-overlay').style.display = 'none';
         });
 
         function playTone(freq) {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            
+            osc.frequency.value = freq;
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-            
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
+            osc.stop(audioCtx.currentTime + 0.2);
         }
 
         function drawDefaultNoteIcon() {
             const canvas = document.getElementById('duration-canvas');
+            if(!canvas) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#ffffff";
@@ -163,13 +152,11 @@
             document.getElementById('clef-t').className = (mode === "treble") ? "clef-lit" : "clef-unlit";
             document.getElementById('clef-b').className = (mode === "bass") ? "clef-lit" : "clef-unlit";
             
-            if (playSound) {
-                playTone(currentNote.freq);
-            }
+            if (playSound) playTone(currentNote.freq);
         }
 
-        document.querySelectorAll('button').forEach(b => {
-            if(b.id === 'start-btn') return;
+        // Only target the D-pad buttons explicitly, leaving the start button alone
+        document.querySelectorAll('#d-pad button').forEach(b => {
             b.addEventListener('pointerdown', (e) => {
                 const dir = e.target.dataset.dir;
                 if (!dir) return;
