@@ -15,6 +15,7 @@
         #controls { margin-top: 40px; display: flex; align-items: center; gap: 15px; }
         #d-pad { display: grid; grid-template-columns: 50px 50px 50px; gap: 5px; align-items: center; justify-items: center; position: relative; }
         
+        /* Solfège label positioned to the left of the Up button and above the Left button */
         #solfege-label {
             position: absolute;
             top: 0px;
@@ -28,19 +29,8 @@
             font-weight: bold;
         }
 
-        #duration-display {
-            position: absolute;
-            top: 0px;
-            right: 0px;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
         .label-container { width: 50px; text-align: center; font-size: 20px; font-weight: bold; }
-        button { height: 50px; width: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; cursor: pointer; }
+        button { height: 50px; width: 50px; border-radius: 8px; border: 1px solid #333; background: #eee; }
         .clef-lit { font-weight: bold; font-size: 24px; color: #000; }
         .clef-unlit { font-weight: bold; font-size: 24px; color: #ccc; }
     </style>
@@ -55,9 +45,6 @@
         <div id="clef-b" class="clef-unlit">B</div>
         <div id="d-pad">
             <div id="solfege-label">Do</div>
-            <div id="duration-display">
-                <canvas id="duration-canvas" width="30" height="30"></canvas>
-            </div>
             <div></div><button data-dir="up">^</button><div></div>
             <button data-dir="left"><</button>
             <div id="note-label" class="label-container">C4</div>
@@ -91,9 +78,8 @@
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         let audioCtx;
         
-        // Exact original unblocked audio context creation
         document.getElementById('start-btn').addEventListener('click', () => {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             audioCtx.resume();
             document.getElementById('audio-overlay').style.display = 'none';
         });
@@ -110,24 +96,6 @@
             osc.start();
             osc.stop(audioCtx.currentTime + 0.2);
         }
-
-        function drawDefaultNoteIcon() {
-            const canvas = document.getElementById('duration-canvas');
-            if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#ffffff";
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 2;
-
-            ctx.beginPath();
-            ctx.ellipse(12, 20, 5, 3.5, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(16, 20);
-            ctx.lineTo(16, 8);
-            ctx.stroke();
-        }
         
         let mode = "treble";
         let idx = 0; 
@@ -137,30 +105,32 @@
             const currentNote = scale[idx];
             const noteLetter = currentNote.name.charAt(0);
             
+            // Update Note Label
             const label = document.getElementById('note-label');
             label.textContent = currentNote.name;
             label.style.color = chakraColors[idx % 7];
 
+            // Update Solfege Label
             const solfegeEl = document.getElementById('solfege-label');
             solfegeEl.textContent = solfegeMap[noteLetter];
             solfegeEl.style.color = chakraColors[idx % 7];
 
+            // Update Note Head
             const head = document.getElementById('note-head');
             head.style.color = chakraColors[idx % 7];
             head.style.top = currentNote.top + 'px';
 
+            // Update Clefs
             document.getElementById('clef-t').className = (mode === "treble") ? "clef-lit" : "clef-unlit";
             document.getElementById('clef-b').className = (mode === "bass") ? "clef-lit" : "clef-unlit";
             
             if (playSound) playTone(currentNote.freq);
         }
 
-        // Only target the D-pad buttons explicitly, leaving the start button alone
-        document.querySelectorAll('#d-pad button').forEach(b => {
+        document.querySelectorAll('button').forEach(b => {
+            if(b.id === 'start-btn') return;
             b.addEventListener('pointerdown', (e) => {
                 const dir = e.target.dataset.dir;
-                if (!dir) return;
-
                 if (mode === "treble") {
                     if (dir === 'up') idx = Math.min(idx + 1, trebleScale.length - 1);
                     else if (dir === 'down') {
@@ -178,9 +148,8 @@
                 update(true);
             });
         });
-
-        drawDefaultNoteIcon();
         update();
     </script>
 </body>
 </html>
+
