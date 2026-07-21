@@ -11,7 +11,10 @@
         #audio-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 100; display: flex; justify-content: center; align-items: center; }
         #top-gap { height: 20px; width: 100%; }
         #staff-canvas { width: 90%; height: 122px; background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px); position: relative; }
-        #note-head { position: absolute; left: 45%; font-size: 25px; transition: top 0.1s; transform: translate(-50%, -50%); }
+        
+        /* Note head positioned horizontally centered over the B key slot (approx middle-left of the middle octave, perfectly aligned above the B key) */
+        #note-head { position: absolute; left: 32%; font-size: 25px; transition: top 0.1s; transform: translate(-50%, -50%); }
+        
         #controls { margin-top: 20px; display: flex; align-items: center; gap: 15px; }
         #d-pad { display: grid; grid-template-columns: 50px 50px 50px; gap: 5px; align-items: center; justify-items: center; position: relative; }
         
@@ -122,6 +125,7 @@
         <div class="black-key-slot"><div class="black-key"></div></div>
         <div class="white-key"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
+        <!-- B3 key is the 7th white key of the first octave, perfectly aligned under 32% staff offset -->
         <div class="white-key"></div>
 
         <!-- Octave 4 White Keys (C4 - Middle C, D4, E4, F4, G4, A4, B4) -->
