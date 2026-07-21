@@ -13,13 +13,13 @@
         #staff-canvas { width: 90%; height: 122px; background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px); position: relative; }
         #note-head { position: absolute; left: 45%; font-size: 25px; transition: top 0.1s; transform: translate(-50%, -50%); }
         #controls { margin-top: 40px; display: flex; align-items: center; gap: 15px; }
-        #d-pad { display: grid; grid-template-columns: 50px 50px 50px; gap: 5px; align-items: center; justify-items: center; position: relative; background: #222; padding: 5px; border-radius: 12px; }
+        #d-pad { display: grid; grid-template-columns: 50px 50px 50px; gap: 5px; align-items: center; justify-items: center; position: relative; }
         
         /* Solfège label: Left of Up button, above Left button */
         #solfege-label {
             position: absolute;
-            top: 5px;
-            left: 5px;
+            top: 0px;
+            left: 0px;
             width: 50px;
             height: 50px;
             display: flex;
@@ -32,8 +32,8 @@
         /* Note Length indicator: Right of Up button, above Right button */
         #duration-display {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 0px;
+            right: 0px;
             width: 50px;
             height: 50px;
             display: flex;
@@ -95,30 +95,34 @@
         
         document.getElementById('start-btn').addEventListener('click', async () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            await audioCtx.resume();
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
             document.getElementById('audio-overlay').style.display = 'none';
         });
 
         function playTone(freq) {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
+            
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             
-            // Standard original duration of 0.3 seconds
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
             
             osc.connect(gain);
             gain.connect(audioCtx.destination);
+            
             osc.start();
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // Draw static default note duration icon (Quarter note) in white
         function drawDefaultNoteIcon() {
             const canvas = document.getElementById('duration-canvas');
             const ctx = canvas.getContext('2d');
@@ -127,7 +131,6 @@
             ctx.strokeStyle = "#ffffff";
             ctx.lineWidth = 2;
 
-            // Quarter note (filled head + stem)
             ctx.beginPath();
             ctx.ellipse(12, 20, 5, 3.5, -0.3, 0, Math.PI * 2);
             ctx.fill();
@@ -145,32 +148,32 @@
             const currentNote = scale[idx];
             const noteLetter = currentNote.name.charAt(0);
             
-            // Update Note Label
             const label = document.getElementById('note-label');
             label.textContent = currentNote.name;
             label.style.color = chakraColors[idx % 7];
 
-            // Update Solfege Label
             const solfegeEl = document.getElementById('solfege-label');
             solfegeEl.textContent = solfegeMap[noteLetter];
             solfegeEl.style.color = chakraColors[idx % 7];
 
-            // Update Note Head
             const head = document.getElementById('note-head');
             head.style.color = chakraColors[idx % 7];
             head.style.top = currentNote.top + 'px';
 
-            // Update Clefs
             document.getElementById('clef-t').className = (mode === "treble") ? "clef-lit" : "clef-unlit";
             document.getElementById('clef-b').className = (mode === "bass") ? "clef-lit" : "clef-unlit";
             
-            if (playSound) playTone(currentNote.freq);
+            if (playSound) {
+                playTone(currentNote.freq);
+            }
         }
 
         document.querySelectorAll('button').forEach(b => {
             if(b.id === 'start-btn') return;
             b.addEventListener('pointerdown', (e) => {
                 const dir = e.target.dataset.dir;
+                if (!dir) return;
+
                 if (mode === "treble") {
                     if (dir === 'up') idx = Math.min(idx + 1, trebleScale.length - 1);
                     else if (dir === 'down') {
