@@ -99,7 +99,7 @@
             document.getElementById('audio-overlay').style.display = 'none';
         });
 
-        // Exact original sound playback code preserved completely
+        // 100% exact original playTone function (0.2 seconds duration)
         function playTone(freq) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
