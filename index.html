@@ -12,7 +12,7 @@
         #top-gap { height: 20px; width: 100%; }
         #staff-canvas { width: 90%; height: 122px; background-image: repeating-linear-gradient(to bottom, #000, #000 2px, transparent 2px, transparent 30px); position: relative; }
         
-        /* Note head positioned horizontally centered over the B key slot (approx middle-left of the middle octave, perfectly aligned above the B key) */
+        /* Note head positioned horizontally centered over the B key slot */
         #note-head { position: absolute; left: 32%; font-size: 25px; transition: top 0.1s; transform: translate(-50%, -50%); }
         
         #controls { margin-top: 20px; display: flex; align-items: center; gap: 15px; }
@@ -72,6 +72,7 @@
             border-radius: 0 0 4px 4px;
             height: 100%;
             z-index: 1;
+            transition: background-color 0.1s;
         }
         .black-key-slot {
             position: relative;
@@ -113,48 +114,47 @@
 
     <!-- 3-Octave Piano Keyboard Visual Centered on Middle C -->
     <div id="keyboard-container">
-        <!-- Octave 3 White Keys (C3, D3, E3, F3, G3, A3, B3) with black keys in between -->
-        <div class="white-key"></div>
+        <!-- Octave 3 White Keys (C3 to B3) -->
+        <div class="white-key" data-note="C3"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="D3"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="E3"></div>
+        <div class="white-key" data-note="F3"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="G3"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="A3"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <!-- B3 key is the 7th white key of the first octave, perfectly aligned under 32% staff offset -->
-        <div class="white-key"></div>
+        <div class="white-key" data-note="B3"></div>
 
-        <!-- Octave 4 White Keys (C4 - Middle C, D4, E4, F4, G4, A4, B4) -->
-        <div class="white-key" style="background: #eef3ff;"></div>
+        <!-- Octave 4 White Keys (C4 to B4) -->
+        <div class="white-key" data-note="C4"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="D4"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="E4"></div>
+        <div class="white-key" data-note="F4"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="G4"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="A4"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="B4"></div>
 
-        <!-- Octave 5 White Keys (C5, D5, E5, F5, G5, A5, C6 endpoint) -->
-        <div class="white-key"></div>
+        <!-- Octave 5 White Keys (C5 to A5/C6) -->
+        <div class="white-key" data-note="C5"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="D5"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="E5"></div>
+        <div class="white-key" data-note="F5"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="G5"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="A5"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
-        <div class="white-key"></div>
+        <div class="white-key" data-note="C6"></div>
     </div>
 
     <script>
@@ -211,20 +211,21 @@
             const scale = (mode === "treble") ? trebleScale : bassScale;
             const currentNote = scale[idx];
             const noteLetter = currentNote.name.charAt(0);
+            const activeColor = chakraColors[idx % 7];
             
             // Update Note Label
             const label = document.getElementById('note-label');
             label.textContent = currentNote.name;
-            label.style.color = chakraColors[idx % 7];
+            label.style.color = activeColor;
 
             // Update Solfege Label
             const solfegeEl = document.getElementById('solfege-label');
             solfegeEl.textContent = solfegeMap[noteLetter];
-            solfegeEl.style.color = chakraColors[idx % 7];
+            solfegeEl.style.color = activeColor;
 
             // Update Note Head
             const head = document.getElementById('note-head');
-            head.style.color = chakraColors[idx % 7];
+            head.style.color = activeColor;
             head.style.top = currentNote.top + 'px';
 
             // Update Clefs
@@ -233,6 +234,15 @@
 
             // Update Duration Label text
             document.getElementById('duration-label').textContent = durations[durationIdx];
+
+            // Update Piano Keys (Light the matching key with current note's chakra color)
+            document.querySelectorAll('.white-key').forEach(key => {
+                if (key.dataset.note === currentNote.name) {
+                    key.style.backgroundColor = activeColor;
+                } else {
+                    key.style.backgroundColor = '#ffffff';
+                }
+            });
             
             if (playSound) playTone(currentNote.freq);
         }
