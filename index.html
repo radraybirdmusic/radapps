@@ -37,7 +37,6 @@
             width: 50px;
             height: 50px;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
         }
@@ -59,7 +58,6 @@
         <div id="d-pad">
             <div id="solfege-label">Do</div>
             <div id="duration-display">
-                <!-- Canvas draws the note duration icon cleanly in white -->
                 <canvas id="duration-canvas" width="30" height="30"></canvas>
             </div>
             <div></div><button data-dir="up">^</button><div></div>
@@ -77,45 +75,51 @@
         };
 
         const trebleScale = [
-            {name: "C4", top: 150, freq: 261.63, duration: 0.2}, {name: "D4", top: 135, freq: 293.66, duration: 0.2}, {name: "E4", top: 120, freq: 329.63, duration: 0.3}, 
-            {name: "F4", top: 105, freq: 349.23, duration: 0.3}, {name: "G4", top: 90, freq: 392.00, duration: 0.4}, {name: "A4", top: 75, freq: 440.00, duration: 0.4}, 
-            {name: "B4", top: 60, freq: 493.88, duration: 0.5}, {name: "C5", top: 45, freq: 523.25, duration: 0.6}, {name: "D5", top: 30, freq: 587.33, duration: 0.7}, 
-            {name: "E5", top: 15, freq: 659.25, duration: 0.8}, {name: "F5", top: 0, freq: 698.46, duration: 1.0}, {name: "G5", top: -15, freq: 783.99, duration: 1.2}, 
-            {name: "A5", top: -30, freq: 880.00, duration: 1.5}
+            {name: "C4", top: 150, freq: 261.63}, {name: "D4", top: 135, freq: 293.66}, {name: "E4", top: 120, freq: 329.63}, 
+            {name: "F4", top: 105, freq: 349.23}, {name: "G4", top: 90, freq: 392.00}, {name: "A4", top: 75, freq: 440.00}, 
+            {name: "B4", top: 60, freq: 493.88}, {name: "C5", top: 45, freq: 523.25}, {name: "D5", top: 30, freq: 587.33}, 
+            {name: "E5", top: 15, freq: 659.25}, {name: "F5", top: 0, freq: 698.46}, {name: "G5", top: -15, freq: 783.99}, 
+            {name: "A5", top: -30, freq: 880.00}
         ];
         
         const bassScale = [
-            {name: "C4", top: -30, freq: 261.63, duration: 1.5}, {name: "B3", top: -15, freq: 246.94, duration: 1.2}, {name: "A3", top: 0, freq: 220.00, duration: 1.0}, 
-            {name: "G3", top: 15, freq: 196.00, duration: 0.8}, {name: "F3", top: 30, freq: 174.61, duration: 0.7}, {name: "E3", top: 45, freq: 164.81, duration: 0.6}, 
-            {name: "D3", top: 60, freq: 146.83, duration: 0.5}, {name: "C3", top: 75, freq: 130.81, duration: 0.4}, {name: "B2", top: 90, freq: 123.47, duration: 0.4}, 
-            {name: "A2", top: 105, freq: 110.00, duration: 0.3}, {name: "G2", top: 120, freq: 98.00, duration: 0.3}, {name: "F2", top: 135, freq: 87.31, duration: 0.2}, 
-            {name: "E2", top: 150, freq: 82.41, duration: 0.2}
+            {name: "C4", top: -30, freq: 261.63}, {name: "B3", top: -15, freq: 246.94}, {name: "A3", top: 0, freq: 220.00}, 
+            {name: "G3", top: 15, freq: 196.00}, {name: "F3", top: 30, freq: 174.61}, {name: "E3", top: 45, freq: 164.81}, 
+            {name: "D3", top: 60, freq: 146.83}, {name: "C3", top: 75, freq: 130.81}, {name: "B2", top: 90, freq: 123.47}, 
+            {name: "A2", top: 105, freq: 110.00}, {name: "G2", top: 120, freq: 98.00}, {name: "F2", top: 135, freq: 87.31}, 
+            {name: "E2", top: 150, freq: 82.41}
         ];
 
         const chakraColors = ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"];
         let audioCtx;
         
-        document.getElementById('start-btn').addEventListener('click', () => {
+        document.getElementById('start-btn').addEventListener('click', async () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtx.resume();
+            await audioCtx.resume();
             document.getElementById('audio-overlay').style.display = 'none';
         });
 
-        function playTone(freq, duration) {
+        function playTone(freq) {
             if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.frequency.value = freq;
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            // Standard original duration of 0.3 seconds
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+            
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // Draw note shape onto canvas (White styling like clefs)
-        function drawNoteIcon(duration) {
+        // Draw static default note duration icon (Quarter note) in white
+        function drawDefaultNoteIcon() {
             const canvas = document.getElementById('duration-canvas');
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -123,31 +127,14 @@
             ctx.strokeStyle = "#ffffff";
             ctx.lineWidth = 2;
 
-            // Simple visual distinction mapping based on duration length
-            if (duration >= 1.0) {
-                // Whole note (open circle ring)
-                ctx.beginPath();
-                ctx.ellipse(15, 20, 6, 4, -0.3, 0, Math.PI * 2);
-                ctx.stroke();
-            } else if (duration >= 0.5) {
-                // Half note (open circle with stem)
-                ctx.beginPath();
-                ctx.ellipse(12, 20, 5, 3.5, -0.3, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(16, 20);
-                ctx.lineTo(16, 8);
-                ctx.stroke();
-            } else {
-                // Quarter note / shorter (filled note head with stem)
-                ctx.beginPath();
-                ctx.ellipse(12, 20, 5, 3.5, -0.3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(16, 20);
-                ctx.lineTo(16, 8);
-                ctx.stroke();
-            }
+            // Quarter note (filled head + stem)
+            ctx.beginPath();
+            ctx.ellipse(12, 20, 5, 3.5, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(16, 20);
+            ctx.lineTo(16, 8);
+            ctx.stroke();
         }
         
         let mode = "treble";
@@ -176,11 +163,8 @@
             // Update Clefs
             document.getElementById('clef-t').className = (mode === "treble") ? "clef-lit" : "clef-unlit";
             document.getElementById('clef-b').className = (mode === "bass") ? "clef-lit" : "clef-unlit";
-
-            // Draw Duration Icon
-            drawNoteIcon(currentNote.duration);
             
-            if (playSound) playTone(currentNote.freq, currentNote.duration);
+            if (playSound) playTone(currentNote.freq);
         }
 
         document.querySelectorAll('button').forEach(b => {
@@ -204,6 +188,8 @@
                 update(true);
             });
         });
+
+        drawDefaultNoteIcon();
         update();
     </script>
 </body>
