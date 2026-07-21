@@ -56,7 +56,7 @@
         #keyboard-container {
             margin-top: 25px;
             width: 90%;
-            max-width: 400px;
+            max-width: 440px;
             height: 90px;
             position: relative;
             background: #222;
@@ -83,8 +83,8 @@
         .black-key {
             position: absolute;
             top: 0;
-            left: -10px;
-            width: 20px;
+            left: -8px;
+            width: 16px;
             height: 55%;
             background: #111;
             border-radius: 0 0 3px 3px;
@@ -112,8 +112,22 @@
         <div id="clef-t" class="clef-lit">T</div>
     </div>
 
-    <!-- 3-Octave Piano Keyboard Visual Centered on Middle C -->
+    <!-- 4-Octave Piano Keyboard Visual -->
     <div id="keyboard-container">
+        <!-- Octave 2 White Keys (C2 to B2) -->
+        <div class="white-key" data-note="C2"></div>
+        <div class="black-key-slot"><div class="black-key"></div></div>
+        <div class="white-key" data-note="D2"></div>
+        <div class="black-key-slot"><div class="black-key"></div></div>
+        <div class="white-key" data-note="E2"></div>
+        <div class="white-key" data-note="F2"></div>
+        <div class="black-key-slot"><div class="black-key"></div></div>
+        <div class="white-key" data-note="G2"></div>
+        <div class="black-key-slot"><div class="black-key"></div></div>
+        <div class="white-key" data-note="A2"></div>
+        <div class="black-key-slot"><div class="black-key"></div></div>
+        <div class="white-key" data-note="B2"></div>
+
         <!-- Octave 3 White Keys (C3 to B3) -->
         <div class="white-key" data-note="C3"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
@@ -142,7 +156,7 @@
         <div class="black-key-slot"><div class="black-key"></div></div>
         <div class="white-key" data-note="B4"></div>
 
-        <!-- Octave 5 White Keys (C5 to A5/C6) -->
+        <!-- Octave 5 White Keys (C5 to C6) -->
         <div class="white-key" data-note="C5"></div>
         <div class="black-key-slot"><div class="black-key"></div></div>
         <div class="white-key" data-note="D5"></div>
